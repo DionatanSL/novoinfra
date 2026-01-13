@@ -1,0 +1,229 @@
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+
+body { background: url('https://www.cloudmasters.es/wp-content/uploads/2023/01/telecos.jpg') no-repeat center center fixed; background-size: cover; height: 100vh; overflow: hidden; }
+body::before { content:""; position:fixed; inset:0; background:rgba(0, 0, 0, 0.95); z-index:-1; }
+
+.public-area { height:100vh; display:flex; justify-content:center; align-items:center; }
+
+.login-box { background:rgba(15, 23, 42, 0.95); padding:35px; border-radius:10px; width:340px; text-align: center; border: 1px solid #1e293b; color: white; }
+.login-box input, .login-box button { width:100%; padding:12px; margin-top:10px; border-radius: 5px; border: none; }
+.login-box button { background:#00c3ff; cursor:pointer; font-weight:bold; color: #000; }
+
+.sidebar { width:240px; background:#0b1320; color:white; padding:20px; flex-shrink: 0; border-right: 1px solid #1e293b; height: 100vh; }
+.sidebar h2 { text-align:center; margin-bottom:25px; color: #00c3ff; font-size: 1.1rem; font-weight: bold; }
+.sidebar li { list-style:none; padding:12px; background:#121c2e; margin-bottom:10px; border-radius:5px; cursor:pointer; transition: 0.3s; color: #94a3b8; }
+.sidebar li:hover { background:#1e293b; color: white; padding-left: 20px; }
+
+.submenu { display: none; padding-left: 15px; margin-bottom: 10px; }
+.submenu li { font-size: 0.85rem; background: #0f172a; padding: 8px; border-left: 2px solid #00c3ff; border-radius: 0 5px 5px 0; margin-bottom: 5px; color: #cbd5e1; }
+
+.main { display: flex; height: 100vh; }
+.content { flex:1; padding:30px; background: transparent; overflow:auto; color: white; }
+
+.page { display:none; } .page.active { display:block; }
+
+.card-resumo, .chart-box-container, .card-custom { background: rgba(15, 23, 42, 0.96); padding: 20px; border-radius: 10px; border: 1px solid #1e293b; text-align: center; margin-bottom: 20px; }
+.chart-box-container { height: 320px; display: flex; flex-direction: column; }
+
+.text-title-cyan { color: #00c3ff !important; font-weight: bold; display: flex; align-items: center; }
+.text-title-yellow { color: #ffcc00 !important; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 15px; }
+
+#mapa-container { flex: 1; width: 100%; border-radius: 5px; border: 1px solid #334155; height: 100%; }
+
+table { width:100%; color: #cbd5e1; text-align: left; font-size: 0.82rem; border-collapse: collapse; }
+th { background: rgba(30, 41, 59, 0.9); color: #00c3ff; padding: 10px; border-bottom: 2px solid #1e293b; }
+td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+.btn-marca { padding: 6px 12px; background: #0b1320; color: white; border: 1px solid #00c3ff; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 2px; font-size: 0.75rem; transition: 0.3s; }
+.btn-marca:hover { background: #00c3ff; color: #000; }
+.btn-medium { padding: 8px; font-size: 0.85rem; font-weight: bold; margin-top: 5px; width: 100%; border-radius: 4px; display: block; }
+
+.row-pendente { background: rgba(175, 25, 5, 0.15) !important; border-left: 4px solid #f5360b; }
+.row-entregue { background: rgba(16, 185, 129, 0.15) !important; border-left: 4px solid #10b981; }
+
+.pop-details, .gerador-details { display: none; background: #0b1320; padding: 15px; border-radius: 5px; border: 1px solid #1e293b; margin: 5px 0; }
+.detail-text { font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; text-align: left; }
+.detail-text b { color: #00c3ff; }
+.user-tag { font-size: 0.7rem; color: #94a3b8; font-style: italic; display: block; }
+
+.check-box { width: 22px; height: 22px; cursor: pointer; accent-color: #10b981; }
+
+.pagination-container { display: flex; justify-content: center; margin-top: 15px; gap: 5px; }
+.page-btn { padding: 4px 12px; background: #1e293b; border: 1px solid #334155; color: white; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
+.page-btn.active { background: #00c3ff; color: #000; font-weight: bold; }
+
+/* --- ESTILO PREVISÃO DO TEMPO --- */
+.weather-item {
+    background: rgba(30, 41, 59, 0.5);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    min-width: 180px;
+    text-align: center;
+    margin: 5px;
+}
+.weather-temp { font-size: 1.2rem; font-weight: bold; color: #00c3ff; }
+.weather-state { font-size: 0.7rem; color: #ffcc00; font-weight: bold; text-transform: uppercase; }
+.weather-desc { font-size: 0.75rem; color: #cbd5e1; }
+
+/* ============================================================== */
+/* MANUTENÇÃO: CONTRASTE DOS MENUS (POP, TÉCNICO, COORDENADOR)    */
+/* ============================================================== */
+.choices__inner {
+    background-color: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+.choices__list--dropdown {
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    z-index: 9999 !important;
+}
+
+.choices__item {
+    color: #ffffff !important;
+    font-size: 0.85rem !important;
+}
+
+.choices__item--selectable.is-highlighted {
+    background-color: #1e293b !important;
+    color: #00c3ff !important;
+}
+
+.choices__input {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+/* ============================================================== */
+/* ESTILO SLIM GLOW - DEFINIÇÃO TÉCNICA                          */
+/* ============================================================== */
+.stat-card-slim {
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    height: 75px;
+}
+
+.stat-icon-glow { font-size: 1.6rem; flex-shrink: 0; }
+.icon-blue { color: #00d2ff; filter: drop-shadow(0 0 8px #00d2ff); }
+.icon-yellow { color: #ffcc00; filter: drop-shadow(0 0 8px #ffcc00); }
+.icon-red { color: #ff4d4d; filter: drop-shadow(0 0 8px #ff4d4d); }
+
+.stat-info { display: flex; flex-direction: column; }
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: -2px;
+}
+
+.label-blue { color: #00d2ff; }
+.label-yellow { color: #ffcc00; }
+.label-red { color: #ff4d4d; }
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #22c55e !important;
+}
+
+/* ============================================================== */
+/* ESTILO EXCLUSIVO PARA O TÍTULO VISÃO GERAL                     */
+/* ============================================================== */
+.title-glow-modern {
+    color: #00d2ff !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+
+.title-glow-modern i {
+    color: #00d2ff;
+    filter: drop-shadow(0 0 8px #00d2ff);
+    font-size: 1.4rem;
+}
+
+/* Estilo para a Logo da Dinâmica no Topo */
+.logo-titulo-neon {
+    height: 45px;
+    width: auto;
+    filter: drop-shadow(0 0 12px #00d2ff);
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.logo-titulo-neon:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px #00d2ff);
+}
+
+.d-flex.align-items-center {
+    display: flex !important;
+    align-items: center !important;
+}
+.sidebar-footer {
+    margin-top: auto; /* Empurra para o final da sidebar */
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+.dev-name {
+    font-size: 0.8rem;
+    color: #00d2ff;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.dev-version {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+/* Container dos botões de filtro */
+.filter-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 10px 0;
+}
+
+/* Estilo Base do Botão de Filtro */
+.btn-filter {
+    background: transparent;
+    color: #ffffff;
+    border: 2px solid #00d2ff; /* Azul Neon */
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+/* Efeito ao passar o mouse (Hover) */
+.btn-filter:hover {
+    background: rgba(0, 210, 255, 0.2);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Estilo para o Botão Ativo (Quando selecionado) */
+.btn-filter.active {
+    background: #00d2ff;
+    color: #0f172a; /* Cor de fundo do seu dashboard */
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
+}

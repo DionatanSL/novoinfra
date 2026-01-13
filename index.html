@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOC Infraestrutura | Auditoria e Gestão Pro</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="public-area" id="login-screen">
+        <div class="login-box shadow-lg">
+            <h2 class="text-title-cyan">Painel Infraestrutura</h2>
+            <input id="user" placeholder="Usuário" autocomplete="off">
+            <input id="pass" type="password" placeholder="Senha">
+            <button onclick="logar()">ACESSAR</button>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="main">
+            <div class="sidebar shadow">
+                <h2>INFRA OPERAÇÕES</h2>
+                <li onclick="showPage('home')">🏠 Dashboard</li>
+                <li onclick="toggleSubMenu('popMenu')">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
+                <div id="popMenu" class="submenu">
+                    <li onclick="showPage('pops')">📑 Lista de POPs</li>
+                    <li onclick="showPage('geradoresnobreaks')">🗄️ Geradores</li>
+                    <li onclick="showPage('baterias')">🔋 Baterias</li>
+                    <li onclick="showPage('energia')">⚡ Energia</li>
+                    <li onclick="showPage('temperatura')">🌡️ Temperatura</li>
+                    <li onclick="showPage('acessopops')">🔐 Acesso Pops</li>
+                    <div class="sidebar-footer">
+    <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
+    <p class="dev-name">Dionatan Lima</p>
+    <p class="dev-version">Versão 1.2.5</p>
+</div>
+                </div>
+                <li onclick="location.reload()">🚪 Sair</li>
+            </div>
+
+            <div class="content">
+                
+                <div id="home" class="page active">
+  <h1 class="h4 mb-4 d-flex align-items-center gap-3" style="color: #00d2ff; font-weight: 800;">
+    <img src="img/logo.png" class="logo-titulo-neon" alt="">
+    VISÃO GERAL
+</h1>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card-slim">
+            <div class="stat-icon-glow icon-blue">
+                <i class="fas fa-satellite-dish"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label label-blue">POPS ATIVOS</span>
+                <span class="stat-value" id="totalPops">76</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card-slim">
+            <div class="stat-icon-glow icon-yellow">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label label-yellow">ENERGIA AC</span>
+                <span class="stat-value">NORMAL</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card-slim">
+            <div class="stat-icon-glow icon-red">
+                <i class="fas fa-thermometer-half"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label label-red">TEMPERATURA</span>
+                <span class="stat-value">ESTÁVEL</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card-custom">
+            <h6 class="text-title-yellow mb-3">🌤️ CONDIÇÕES METEOROLÓGICAS (ESTADOS)</h6>
+            <div id="clima-container" class="d-flex justify-content-between flex-wrap">
+                </div>
+        </div>
+    </div>
+</div>
+<div id="secao-retificadoras" style="background: #0f172a; padding: 20px; border-radius: 10px; font-family: sans-serif;">
+    
+   
+
+    <div id="container-alarme-ret" style="background: #1e293b; border: 2px solid #ef4444; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; min-height: 60px; margin-bottom: 20px;">
+        <span id="texto-alarme-ret" style="color: #fff; font-weight: bold; font-size: 1.1rem; text-align: center;"></span>
+    </div>
+
+    <div id="lista-retificadoras-corpo">
+        </div>
+</div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4"><div class="chart-box-container"><div class="text-title-yellow">Localização Geográfica</div><div id="mapa-container"></div></div></div>
+                        <div class="col-md-4">
+    <div class="chart-box-container text-center" style="height: 320px; display: flex; flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
+        <div class="text-title-yellow" style="margin-bottom: 5px;">Retificadoras</div>
+        <div id="container-grafico-vdc" style="flex: 1; position: relative; width: 100%; min-height: 200px;">
+            <canvas id="graficoVdc"></canvas>
+        </div>
+    </div>
+</div>
+                        <div class="col-md-4"><div class="chart-box-container text-center"><div class="text-title-yellow">Status Térmico</div><canvas id="graficoTermico"></canvas></div></div>
+                    </div>
+                </div>
+
+                <div id="pops" class="page card-custom text-start">
+                    <h2 class="h5 text-title-cyan">📡 POPs Operacionais (76)</h2>
+<div class="container-busca-elite" style="padding: 15px; background: #0f172a;">
+    <input type="text" 
+           id="inputAutoBuscaPops" 
+           oninput="autoFiltroPops()" 
+           placeholder="🔍 Localizar POP ou ID na Rede..." 
+           style="width: 100%; 
+                  padding: 15px; 
+                  border-radius: 12px; 
+                  border: 2px solid #00d2ff; 
+                  background: #1e293b; 
+                  color: white; 
+                  font-size: 1.1rem; 
+                  font-weight: bold; 
+                  outline: none; 
+                  box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); 
+                  transition: 0.3s;"
+           onfocus="this.style.boxShadow='0 0 30px rgba(0, 210, 255, 0.4)'; this.style.borderColor='#fff';"
+           onblur="this.style.boxShadow='0 0 15px rgba(0, 210, 255, 0.2)'; this.style.borderColor='#00d2ff';">
+</div>                    <div style="max-height: 500px; overflow-y: auto;">
+                        <table id="tabelaPops">
+                            <thead><tr><th>POP (Clique para detalhes)</th><th>Status</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="acessopops" class="page">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="h5 m-0 text-title-cyan">🔐 Gestão de Acesso Técnica</h2>
+                        <div class="d-flex gap-2">
+                            <button onclick="exportarAcessos()" class="btn btn-success btn-sm"><i class="fas fa-file-export"></i> EXPORTAR</button>
+                            <button onclick="limparAcessos()" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> LIMPAR TUDO</button>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card-custom text-start" style="background: rgba(15, 23, 42, 0.95); padding: 15px;">
+                                <h6 class="text-title-yellow mb-3">Novo Registro</h6>
+                                <label class="field-label">Técnico</label><select id="tecNome"></select>
+                                <label class="field-label">Pop</label><select id="tecPop"></select>
+                                <label class="field-label">Chave</label>
+                                <select id="tecChave" class="form-select mb-2" style="background:#0f172a; color:white; border:1px solid #1e293b;">
+                                    <option value="Principal">Principal</option>
+                                    <option value="Reserva">Reserva</option>
+                                    <option value="Remoto">Remoto</option>
+                                    <option value="Acesso Local">Acesso Local</option>
+                                </select>
+                                <label class="field-label">Coordenador</label><select id="tecCoordenador"></select>
+                                <label class="field-label">Manutenção</label>
+                                <select id="tecMotivo" class="form-select mb-2" style="background:#0f172a; color:white; border:1px solid #1e293b;">
+                                    <option value="M PREVENTIVA">M PREVENTIVA</option>
+                                    <option value="M CORRETIVA">M CORRETIVA</option>
+                                    <option value="VISTORIA">VISTORIA</option>
+                                </select>
+                                <button onclick="registrarAcesso()" class="btn btn-primary w-100 mt-2">REGISTRAR</button>
+
+<button onclick="window.open('https://172.20.0.82:4445/#/login', '_blank')" class="btn btn-warning w-100 mt-2">
+    <i class="fas fa-external-link-alt"></i> CONTROLE DE ACESSO
+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="card-custom" style="height:530px; padding:0; display: flex; flex-direction: column;">
+                                <div style="flex:1; overflow-y:auto;">
+                                    <table id="tabelaAcessos">
+                                        <thead>
+                                            <tr><th>Técnico</th><th>POP</th><th>Chave</th><th>Coordenador</th><th>Motivo</th><th>Entrada</th><th>Devolução</th></tr>
+                                        </thead>
+                                        <tbody id="corpoAcessos"></tbody>
+                                    </table>
+                                </div>
+                                <div class="pagination-container" id="paginacao"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="energia" class="page card-custom text-start">
+                    <h2 class="h5 text-title-cyan mb-4">⚡ Energia</h2>
+    <div class="filter-group">
+    <button class="btn-filter active" onclick="filtrarEnergia('TODOS')">Todos</button>
+    <button class="btn-filter" onclick="filtrarEnergia('HUAWEI')">Huawei</button>
+    <button class="btn-filter" onclick="filtrarEnergia('ZTE')">ZTE</button>
+    <button class="btn-filter" onclick="filtrarEnergia('CPS')">CPS</button>
+    <button class="btn-filter" onclick="filtrarEnergia('SPS')">SPS</button>
+    <button class="btn-filter" onclick="filtrarEnergia('XPS')">XPS</button>
+</div>
+                    <table id="tabelaEnergia">
+                        <thead><tr><th>Identificação da Fonte</th><th>Status</th><th>Tensão AC</th><th>Tensão DC</th></tr></thead>
+                        <tbody id="corpoEnergia"></tbody>
+                    </table>
+                </div>
+
+                <div id="geradoresnobreaks" class="page card-custom text-start">
+                    <h2 class="h5 text-title-cyan mb-4">🗄️ Manutenção Preventiva de Geradores</h2>
+                    <div style="max-height: 550px; overflow-y: auto;">
+                        <table id="tabelaGeradores">
+                            <thead>
+                                <tr><th>Marca</th><th>Potência</th><th>Local</th><th>Cidade</th><th>Próxima Manutenção</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="corpoGeradores"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="temperatura" class="page card-custom text-start">
+                    <h2 class="h5 text-title-cyan">🌡️ Temperatura</h2>
+                    <div class="btn-group mb-3">
+                        <button class="btn-marca">Ambiente</button>
+                        <button class="btn-marca">Interna SW</button>
+                        <button class="btn-marca">Interna OLT</button>
+                        <button class="btn-marca">Ar condicionados</button>
+                        <button class="btn-marca">BTS</button>
+                    </div>
+                </div>
+
+                <div id="baterias" class="page card-custom text-start">
+    <h2 class="h5 text-title-cyan">🔋 Gestão de Baterias (76 POPs)</h2>
+    
+<div class="busca-container" style="padding: 15px; background: #0f172a;">
+    <input type="text" 
+           id="inputAutoBusca" 
+           oninput="autoFiltro()" 
+           placeholder="🔍 Comece a digitar para localizar..." 
+           style="width: 100%; 
+                  padding: 15px; 
+                  border-radius: 12px; 
+                  border: 2px solid #00d2ff; 
+                  background: #1e293b; 
+                  color: white; 
+                  font-size: 1.1rem; 
+                  font-weight: bold; 
+                  outline: none; 
+                  box-shadow: 0 0 15px rgba(0, 210, 255, 0.2); 
+                  transition: 0.3s;">
+</div>    
+    <table id="tabelaBaterias">
+        <thead>
+            <tr><th>Local</th><th>Saúde</th><th>Vdc</th></tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
+            </div> </div> </div> <script src="js/data.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+      <script src="js/maps.js"></script> 
+      <script src="js/charts.js"></script>
+        <script src="js/database.js"></script>
+    <script src="js/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <button onclick="sincronizarPopsFinal()" class="btn-sync">🔄 Sincronizar Planilha</button>
+</body>
+</html>
