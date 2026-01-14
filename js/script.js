@@ -683,3 +683,22 @@ document.addEventListener("DOMContentLoaded", function() {
         sincronizarPopsFinal();
     }
 });
+// 🔥 GARANTIA DE CARREGAMENTO AUTOMÁTICO AO ATUALIZAR
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("🚀 Sistema reiniciado! Recuperando dados...");
+
+    // 1. Recarrega a Tabela de Acessos Técnicos (do localStorage)
+    if (typeof carregarTabelaAcessos === 'function') {
+        carregarTabelaAcessos();
+    }
+
+    // 2. Recarrega os Geradores/POPs (da planilha online)
+    if (typeof sincronizarPopsFinal === 'function') {
+        sincronizarPopsFinal();
+    }
+
+    // 3. Recarrega o Clima (HG Brasil)
+    if (typeof carregarClimaNOC === 'function') {
+        carregarClimaNOC();
+    }
+});
