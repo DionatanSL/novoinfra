@@ -535,7 +535,7 @@ window.carregarClimaNOC = async function() {
     if (!container) return;
 
     // Chave ad37e7d0 vinculada ao domínio 172.20.0.82
-    const apiKey = 'ad37e7d0'; 
+    const apiKey = 'e0555ec7'; 
     const cidades = [
         { nome: "Vitoria,ES", uf: "ES" },
         { nome: "Salvador,BA", uf: "BA" },
