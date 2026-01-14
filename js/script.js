@@ -662,3 +662,24 @@ function efetuarLogout() {
     // 2. Sai do dashboard e volta para o login
     window.location.href = 'index.html'; 
 }
+// GATILHO PARA CARREGAR TUDO AO ABRIR OU ATUALIZAR A PAGINA
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("🚀 Página carregada! Iniciando componentes...");
+
+    // 1. Inicia o Clima (HG Brasil)
+    if (typeof carregarClimaNOC === 'function') {
+        carregarClimaNOC();
+    }
+
+    // 2. Inicia o Minimap (Ajuste o nome da função se for diferente)
+    if (typeof carregarMinimap === 'function') {
+        carregarMinimap();
+    } else if (typeof initMap === 'function') {
+        initMap();
+    }
+    
+    // 3. Inicia os POPs
+    if (typeof sincronizarPopsFinal === 'function') {
+        sincronizarPopsFinal();
+    }
+});
