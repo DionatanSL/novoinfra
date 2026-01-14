@@ -683,22 +683,30 @@ document.addEventListener("DOMContentLoaded", function() {
         sincronizarPopsFinal();
     }
 });
-// 🔥 GARANTIA DE CARREGAMENTO AUTOMÁTICO AO ATUALIZAR
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("🚀 Sistema reiniciado! Recuperando dados...");
+// FUNÇÃO MESTRE DE CARREGAMENTO
+function inicializarSistemaTotal() {
+    console.log("🛠️ Verificando persistência de dados...");
 
-    // 1. Recarrega a Tabela de Acessos Técnicos (do localStorage)
+    // 1. Forçar renderização da Gestão de Acesso
     if (typeof carregarTabelaAcessos === 'function') {
+        // Garantimos que a variável global tenha os dados do localStorage antes de desenhar
+        dbAcessos = JSON.parse(localStorage.getItem('bancoAcessos')) || [];
         carregarTabelaAcessos();
+        console.log("✅ Tabela de Acessos carregada.");
     }
 
-    // 2. Recarrega os Geradores/POPs (da planilha online)
+    // 2. Forçar renderização dos Geradores/POPs
     if (typeof sincronizarPopsFinal === 'function') {
         sincronizarPopsFinal();
+        console.log("✅ Geradores sincronizados.");
     }
 
-    // 3. Recarrega o Clima (HG Brasil)
+    // 3. Forçar Clima
     if (typeof carregarClimaNOC === 'function') {
         carregarClimaNOC();
     }
-});
+}
+
+// Executa IMEDIATAMENTE e também após o carregamento total
+inicializarSistemaTotal();
+window.onload = inicializarSistemaTotal;
