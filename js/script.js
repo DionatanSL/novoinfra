@@ -19,6 +19,33 @@ function initUI() {
         initCharts(); 
     }, 150);
 }
+// Função específica para a nova tela de Documentação
+function atualizarTabelaDocumentacao() {
+    const tabela = document.getElementById('tabelaDocCorpo');
+    if (!tabela) return;
+
+    // Pega a lista de POPs que você já usa no sistema
+    const lista = window.popsList || JSON.parse(localStorage.getItem('bancoPops')) || [];
+
+    tabela.innerHTML = ""; 
+    lista.forEach(pop => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${pop.nome}</td>
+            <td><button class="btn btn-sm btn-info" onclick="alert('Docs de ${pop.nome}')">Visualizar</button></td>
+        `;
+        tabela.appendChild(tr);
+    });
+}
+
+// Interceptar o clique para carregar a tabela quando a página abrir
+const originalShowPageDoc = window.showPage;
+window.showPage = function(pageId) {
+    if (typeof originalShowPageDoc === 'function') originalShowPageDoc(pageId);
+    if (pageId === 'equipamentosPage') {
+        atualizarTabelaDocumentacao();
+    }
+};
 
 // ==============================================================
 // 📡 INVENTÁRIO DE POPS: MOTOR DINÂMICO DE AUDITORIA
@@ -683,30 +710,34 @@ document.addEventListener("DOMContentLoaded", function() {
         sincronizarPopsFinal();
     }
 });
-// FUNÇÃO MESTRE DE CARREGAMENTO
-function inicializarSistemaTotal() {
-    console.log("🛠️ Verificando persistência de dados...");
+function inicializarPainelSeguro() {
+    console.log("🚀 Iniciando Resgate de Dados...");
 
-    // 1. Forçar renderização da Gestão de Acesso
-    if (typeof carregarTabelaAcessos === 'function') {
-        // Garantimos que a variável global tenha os dados do localStorage antes de desenhar
-        dbAcessos = JSON.parse(localStorage.getItem('bancoAcessos')) || [];
-        carregarTabelaAcessos();
-        console.log("✅ Tabela de Acessos carregada.");
-    }
+    // 1. Tenta carregar Gestão de Acesso
+    try {
+        if (typeof carregarTabelaAcessos === 'function') {
+            carregarTabelaAcessos();
+            console.log("✅ Gestão de Acesso: OK");
+        }
+    } catch (e) { console.error("❌ Erro na Gestão de Acesso:", e); }
 
-    // 2. Forçar renderização dos Geradores/POPs
-    if (typeof sincronizarPopsFinal === 'function') {
-        sincronizarPopsFinal();
-        console.log("✅ Geradores sincronizados.");
-    }
+    // 2. Tenta carregar Geradores/POPs
+    try {
+        if (typeof sincronizarPopsFinal === 'function') {
+            sincronizarPopsFinal();
+            console.log("✅ Geradores: OK");
+        }
+    } catch (e) { console.error("❌ Erro nos Geradores:", e); }
 
-    // 3. Forçar Clima
-    if (typeof carregarClimaNOC === 'function') {
-        carregarClimaNOC();
-    }
+    // 3. Tenta carregar Clima e Mapa
+    try {
+        if (typeof carregarClimaNOC === 'function') carregarClimaNOC();
+        if (typeof carregarMinimap === 'function') carregarMinimap();
+    } catch (e) { console.error("❌ Erro nos Componentes Visuais:", e); }
 }
 
-// Executa IMEDIATAMENTE e também após o carregamento total
-inicializarSistemaTotal();
-window.onload = inicializarSistemaTotal;
+// Executa assim que o script carregar
+inicializarPainelSeguro();
+
+// Executa novamente quando a página estiver 100% pronta
+window.addEventListener('load', inicializarPainelSeguro);

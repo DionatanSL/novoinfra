@@ -31,6 +31,28 @@
             <div class="sidebar shadow">
                 <h2>INFRA OPERAÇÕES</h2>
                 <li onclick="showPage('home')">🏠 Dashboard</li>
+                <li onclick="toggleSubMenu('docMenu')">📚 Documentação <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
+<div id="docMenu" class="submenu" style="display: none;">
+    <li onclick="showPage('equipamentosPage')">🛠️ Equipamentos</li>
+</div>
+<div id="equipamentosPage" class="page-content" style="display: none; padding: 20px;">
+    <div class="card shadow-sm p-4" style="background: #1a2234; color: white; border-radius: 10px;">
+        <h3>🛠️ Documentação de Equipamentos</h3>
+        <div class="table-responsive mt-3">
+            <table class="table table-hover table-dark">
+                <thead>
+                    <tr>
+                        <th>📍 Nome do POP</th>
+                        <th>⚙️ Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaDocCorpo">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
                 <li onclick="toggleSubMenu('popMenu')">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
                 <div id="popMenu" class="submenu">
                     <li onclick="showPage('pops')">📑 Lista de POPs</li>
