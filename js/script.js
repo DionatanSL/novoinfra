@@ -534,50 +534,54 @@ window.carregarClimaNOC = async function() {
     const container = document.getElementById("clima-container");
     if (!container) return;
 
-    // Nova chave autorizada para dionatansl.github.io
-    const apiKey = 'e0555ec7'; 
+    // Chave ad37e7d0 vinculada ao domínio 172.20.0.82
+    const apiKey = 'ad37e7d0'; 
     const cidades = [
-        { nome: "Vitoria,ES" },
-        { nome: "Salvador,BA" },
-        { nome: "Rio de Janeiro,RJ" },
-        { nome: "Sao Paulo,SP" }
+        { nome: "Vitoria,ES", uf: "ES" },
+        { nome: "Salvador,BA", uf: "BA" },
+        { nome: "Rio de Janeiro,RJ", uf: "RJ" },
+        { nome: "Sao Paulo,SP", uf: "SP" }
     ];
 
-    container.innerHTML = '<p class="text-muted">🛰️ Sincronizando com satélites HG...</p>';
-    let htmlFinal = "";
-
-    const emojis = {
-        "clear_day": "☀️", "clear_night": "🌙", "cloud": "☁️",
-        "cloudly_day": "🌤️", "cloudly_night": "☁️", "rain": "🌧️", "storm": "⛈️"
-    };
-
-    for (const c of cidades) {
-        try {
-            // Importante: Manter https e format=json-cors para o GitHub Pages
+    try {
+        container.innerHTML = '<p class="text-muted">🛰️ Sincronizando com satélites HG...</p>';
+        
+        const promessasClima = cidades.map(async (c) => {
+            // format=json-cors é vital para evitar erro de bloqueio no browser
             const url = `https://api.hgbrasil.com/weather?format=json-cors&key=${apiKey}&city_name=${c.nome}`;
             const resposta = await fetch(url);
             const d = await resposta.json();
             
-            if (d.error) {
-                console.warn(`Chave recusada para ${c.nome}: ${d.message}`);
-                continue;
-            }
-
             const res = d.results;
-            const emoji = emojis[res.condition_slug] || (res.currently === "noite" ? "🌙" : "☀️");
+            const isNoite = res.currently === "noite"; 
+            
+            // Mapeamento de emojis HG (Dia vs Noite)
+            const emojis = {
+                "clear_day": "☀️",
+                "clear_night": "🌙",
+                "cloud": "☁️",
+                "cloudly_day": "🌤️",
+                "cloudly_night": "☁️",
+                "rain": "🌧️",
+                "storm": "⛈️"
+            };
+            const emoji = emojis[res.condition_slug] || (isNoite ? "🌙" : "☀️");
 
-            htmlFinal += `
+            return `
                 <div class="weather-item shadow-sm">
                     <div class="weather-state">${res.city}</div>
                     <div class="weather-temp">${emoji} ${res.temp}°C</div>
                     <div class="weather-desc">${res.description}</div>
                 </div>`;
-        } catch (err) {
-            console.error(`Erro em ${c.nome}:`, err);
-        }
-    }
+        });
 
-    container.innerHTML = htmlFinal || `<p class="text-danger">⚠️ Verifique a conexão com HG Brasil</p>`;
+        const resultados = await Promise.all(promessasClima);
+        container.innerHTML = resultados.join('');
+        console.log("✅ NOC: Radar climático HG atualizado.");
+    } catch (err) {
+        console.error("Erro no radar HG:", err);
+        container.innerHTML = `<p class="text-danger">Aguardando resposta do servidor HG...</p>`;
+    }
 };
 
 function filtrar() { 
@@ -650,3 +654,11 @@ window.showPage = function(id) {
 
 // Disparo ao carregar a página pela primeira vez
 window.addEventListener('load', () => setTimeout(renderizarGraficoVdcDionatan, 800));
+function efetuarLogout() {
+    // 1. Limpa o login do navegador (impede de entrar de novo sem senha)
+    localStorage.removeItem('logado');
+    localStorage.removeItem('usuarioAtivo');
+
+    // 2. Sai do dashboard e volta para o login
+    window.location.href = 'index.html'; 
+}
