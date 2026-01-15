@@ -227,3 +227,65 @@ td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     color: #0f172a; /* Cor de fundo do seu dashboard */
     box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
 }
+.rack-view-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    background: #020617;
+    border-radius: 8px;
+}
+
+.rack-metal-frame {
+    width: 350px;
+    background: #0f172a;
+    border: 8px solid #334155;
+    border-radius: 10px;
+    padding: 15px 5px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+/* Os furos laterais do rack */
+.rack-metal-frame::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 5px; width: 10px;
+    background: radial-gradient(circle, #475569 2px, transparent 3px);
+    background-size: 100% 24px;
+}
+
+.u-row {
+    height: 22px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border-radius: 2px;
+    font-size: 10px;
+    color: #64748b;
+    transition: all 0.2s;
+}
+
+.u-label {
+    width: 35px;
+    text-align: center;
+    font-weight: bold;
+    border-right: 1px solid #1e293b;
+}
+
+.u-eq-box {
+    flex-grow: 1;
+    height: 100%;
+    padding-left: 10px;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Cores dos Equipamentos */
+.u-rede { background: #1e3a8a !important; color: #38bdf8; border-left: 4px solid #38bdf8; }
+.u-energia { background: #450a0a !important; color: #f87171; border-left: 4px solid #f87171; }
+.u-dc { background: #064e3b !important; color: #4ade80; border-left: 4px solid #4ade80; }
+.u-passivo { background: #1e293b !important; color: #94a3b8; border-left: 4px solid #64748b; }
+.u-vazio { color: #1e293b; }

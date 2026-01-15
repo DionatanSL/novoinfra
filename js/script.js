@@ -49,33 +49,99 @@ window.showPage = function(pageId) {
 
 // ==============================================================
 // 📡 INVENTÁRIO DE POPS: MOTOR DINÂMICO DE AUDITORIA
+// js/script.js
+
+// 🎨 INJEÇÃO DE ESTILO (Força o visual do Rack)
+const style = document.createElement('style');
+style.innerHTML = `
+    .rack-frame { 
+        width: 320px; margin: 0 auto; background: #020617; border: 6px solid #334155; 
+        border-radius: 10px; padding: 10px; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    }
+    .u-row { 
+        height: 20px; display: flex; align-items: center; margin-bottom: 2px; 
+        background: #1e293b; border-radius: 2px; font-size: 10px; color: #94a3b8;
+    }
+    .u-idx { width: 30px; text-align: center; border-right: 1px solid #020617; font-weight: bold; }
+    .u-info { flex-grow: 1; padding-left: 8px; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+    
+    /* Cores dos Equipamentos */
+    .tipo-rede { background: #1e3a8a !important; color: #38bdf8; border-left: 4px solid #38bdf8; }
+    .tipo-energia { background: #450a0a !important; color: #f87171; border-left: 4px solid #f87171; }
+    .tipo-dc { background: #064e3b !important; color: #4ade80; border-left: 4px solid #4ade80; }
+    .tipo-passivo { background: #334155 !important; color: #cbd5e1; }
+    
+    .btn-pop { width: 100%; text-align: left; background: #1a2234; border: 1px solid #334155; color: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .btn-pop:hover { background: #242f47; border-color: #00d2ff; }
+`;
+document.head.appendChild(style);
+
+// 📋 FUNÇÃO 1: MOSTRAR LISTA DE NOMES (POPS)
 function carregarTabelaEquipamentos() {
-    const tbody = document.getElementById("tabelaDocCorpo");
-    if (!tbody) return;
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    if (!container) return;
 
-    tbody.innerHTML = "";
+    btnVoltar.style.display = "none";
+    container.innerHTML = ""; // Limpa tudo
 
-    // Pega as chaves (nomes dos POPs) do seu banco manual
     const dados = window.bancoEquipamentos || {};
-    const nomesDosPops = Object.keys(dados);
+    const pops = Object.keys(dados);
 
-    if (nomesDosPops.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="2" class="text-center text-warning">Aguardando dados de equipamentos_dados.js...</td></tr>';
+    if (pops.length === 0) {
+        container.innerHTML = "<p>Nenhum POP encontrado no banco de dados.</p>";
         return;
     }
 
-    nomesDosPops.forEach(nome => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td style="color:white; padding: 12px;">📍 ${nome}</td>
-            <td>
-                <button class="btn btn-sm btn-info" onclick="abrirRack('${nome}')">
-                    Visualizar
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
+    pops.forEach(pop => {
+        const btn = document.createElement("button");
+        btn.className = "btn-pop";
+        btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Ver Rack 44U ➔</span>`;
+        btn.onclick = () => desenharRack44U(pop);
+        container.appendChild(btn);
     });
+}
+
+// 🗄️ FUNÇÃO 2: DESENHAR O RACK
+function desenharRack44U(pop) {
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    
+    btnVoltar.style.display = "block";
+    container.innerHTML = `<h4 style="text-align:center; color:#00d2ff; margin-bottom:20px;">Rack 44U - ${pop}</h4>`;
+
+    const moldura = document.createElement("div");
+    moldura.className = "rack-frame";
+
+    const equipamentos = window.bancoEquipamentos[pop] || [];
+
+    // Gerar as 44 Us
+    for (let u = 44; u >= 1; u--) {
+        const eq = equipamentos.find(e => e.u === u);
+        const row = document.createElement("div");
+        row.className = "u-row" + (eq ? ` tipo-${eq.tipo}` : "");
+        
+        row.innerHTML = `
+            <div class="u-idx">${u}</div>
+            <div class="u-info">${eq ? eq.nome : "—"}</div>
+        `;
+        moldura.appendChild(row);
+    }
+    container.appendChild(moldura);
+}
+
+function voltarParaLista() {
+    carregarTabelaEquipamentos();
+}
+
+// 🔗 FUNÇÃO DE NAVEGAÇÃO
+function showPage(id) {
+    document.querySelectorAll('.page, .page-content').forEach(p => p.style.display = 'none');
+    const target = document.getElementById(id);
+    if (target) {
+        target.style.display = 'block';
+        if (id === 'equipamentosPage') carregarTabelaEquipamentos();
+    }
 }
 function showPage(pageId) {
     // 1. Esconde tudo que for página

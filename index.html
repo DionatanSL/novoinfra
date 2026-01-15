@@ -55,20 +55,16 @@
             </div>
 
             <div class="content">
-                <div id="equipamentosPage" class="page-content" style="display: none; padding: 20px; width: 100%;">
-    <div class="card shadow-sm p-4" style="background: #1a2234; color: white; border-radius: 10px; margin: 20px;">
-        <h3 style="color: #00d2ff;">🛠️ Documentação de Equipamentos</h3>
-        <div class="table-responsive mt-3">
-            <table class="table table-hover table-dark" style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>📍 Nome do POP</th>
-                        <th>⚙️ Ação</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaDocCorpo"></tbody>
-            </table>
+              <div id="equipamentosPage" class="page-content" style="display: none; width: 100%;">
+    <div style="padding: 20px; max-width: 1200px; margin: auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #00d2ff; margin: 0;">🛠️ Inventário de Racks</h2>
+            <button id="btnVoltarRack" class="btn btn-sm btn-outline-light" style="display: none;" onclick="voltarParaLista()">⬅ Voltar para Lista</button>
         </div>
+
+        <div id="conteudoEquipamentos">
+            </div>
     </div>
 </div>
                 
@@ -297,15 +293,36 @@
             </tbody>
     </table>
 </div>
+<style>
+    .rack-frame {
+    width: 350px; margin: 0 auto; background: #020617;
+    border: 5px solid #334155; border-radius: 10px; padding: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5); position: relative;
+}
+.u-slot {
+    height: 22px; display: flex; align-items: center;
+    margin-bottom: 2px; background: rgba(255,255,255,0.02);
+    font-size: 10px; border-radius: 2px;
+}
+.u-num { width: 30px; color: #64748b; text-align: center; border-right: 1px solid #1e293b; font-weight: bold; }
+.u-name { flex-grow: 1; padding-left: 10px; font-weight: bold; text-transform: uppercase; }
+.u-empty { flex-grow: 1; padding-left: 10px; color: #334155; font-style: italic; }
 
-            </div> </div> </div> <script src="js/data.js"></script>
+/* Cores Neon */
+.u-rede { background: #1e3a8a !important; color: #38bdf8; border-left: 4px solid #38bdf8; }
+.u-energia { background: #450a0a !important; color: #f87171; border-left: 4px solid #f87171; }
+.u-dc { background: #064e3b !important; color: #4ade80; border-left: 4px solid #4ade80; }
+.u-passivo { background: #1e293b !important; color: #94a3b8; }
+</style>
+
+    <script src="js/data.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
-      <script src="js/maps.js"></script> 
-      <script src="js/charts.js"></script>
-        <script src="js/database.js"></script>
+    <script src="js/maps.js"></script> 
+    <script src="js/charts.js"></script>
+    <script src="js/database.js"></script>
+
+    <script src="js/equipamentos_dados.js"></script> 
+
     <script src="js/script.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <button onclick="sincronizarPopsFinal()" class="btn-sync">🔄 Sincronizar Planilha</button>
-</body>
-</html>
