@@ -121,33 +121,49 @@ function mostrarMenuRacks(pop) {
 }
 
 // 3. DESENHO DO RACK (Aceita 12U, 44U e Foto)
+// ==============================================================
+// 1. FUNÇÃO DE LIMPEZA (Normalização de IDs)
+// ==============================================================
+function extrairID(nome) {
+    if (!nome) return "";
+    return nome.split(/[\s\(]/)[0].toUpperCase().trim();
+}
+
+// ==============================================================
+// 2. DESENHO DO RACK (Unificado e Corrigido)
+// ==============================================================
+// ==============================================================
+// 2. DESENHO DO RACK (Unificado e Corrigido)
+// ==============================================================
 function desenharRack(pop, nomeRack) {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     
     if (btnVoltar) btnVoltar.onclick = () => mostrarMenuRacks(pop);
 
-    const dadosRack = window.bancoEquipamentos[pop][nomeRack];
-    if (!dadosRack) return;
+    const idLimpo = extrairID(pop);
+    const dadosRack = window.bancoEquipamentos[idLimpo] ? window.bancoEquipamentos[idLimpo][nomeRack] : null;
+
+    if (!dadosRack) {
+        console.error("Dados não encontrados para:", idLimpo, nomeRack);
+        return;
+    }
 
     const equipamentos = dadosRack.equipamentos || [];
     const linkFoto = dadosRack.foto;
-    
-    // 📏 BUSCA O TAMANHO (Se não tiver no banco, usa 44)
     const totalU = parseInt(dadosRack.tamanho) || 44;
 
     container.innerHTML = `
-        <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${pop}</h4>
+        <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${idLimpo}</h4>
         <h5 style="text-align:center; color:#94a3b8; margin-bottom:15px;">${nomeRack} (${totalU}U)</h5>
     `;
 
-    // Botão da Foto Modal
     if (linkFoto && linkFoto !== "") {
         container.innerHTML += `
             <div style="text-align:center; margin-bottom:20px;">
                 <button class="btn btn-sm" 
                         style="background: #0ea5e9; color: white; font-weight: bold; border-radius: 20px; padding: 5px 20px; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"
-                        onclick="abrirModalFoto('${linkFoto}', '${pop} - ${nomeRack}')">
+                        onclick="abrirModalFoto('${linkFoto}', '${idLimpo} - ${nomeRack}')">
                     📸 VER FOTO REAL DO RACK
                 </button>
             </div>
@@ -157,27 +173,88 @@ function desenharRack(pop, nomeRack) {
     const moldura = document.createElement("div");
     moldura.className = "rack-frame";
 
-    // 🚀 O LOOP AGORA É DINÂMICO (Usa totalU em vez de 44 fixo)
-    for (let u = totalU; u >= 1; u--) {
+    for (let u = 1; u <= totalU; u++) {
         const eq = equipamentos.find(e => e.u === u);
         const row = document.createElement("div");
+        
+        const alturaU = (eq && eq.tamanhoU) ? eq.tamanhoU : 1;
         row.className = "u-row" + (eq ? ` tipo-${eq.tipo}` : "");
-        row.innerHTML = `<div class="u-idx">${u}</div><div class="u-info">${eq ? eq.nome : "—"}</div>`;
+        
+        if (alturaU > 1) {
+            row.style.height = (alturaU * 31) + "px"; 
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+        }
+
+        if (eq) {
+            row.style.cursor = "pointer";
+            row.onclick = () => abrirModalByFace(eq); 
+        }
+
+        const labelU = (alturaU > 1) ? `${u}-${u + alturaU - 1}` : u;
+        row.innerHTML = `<div class="u-idx">${labelU}</div><div class="u-info">${eq ? eq.nome : "—"}</div>`;
+        
         moldura.appendChild(row);
+        if (alturaU > 1) u += (alturaU - 1); 
     }
+    
     container.appendChild(moldura);
 }
 
-// --- FUNÇÕES DO MODAL (MANTENHA ESTAS) ---
+// -------------------------------------------------------------
+// 📸 FUNÇÃO PARA FOTO REAL (CORREÇÃO AQUI)
+// -------------------------------------------------------------
 window.abrirModalFoto = function(caminho, titulo) {
     const modal = document.getElementById('modalFoto');
     const img = document.getElementById('imagemAmpliada');
     const legenda = document.getElementById('legendaFoto');
+    
     if (modal && img) {
+        img.style.display = 'block'; // 👈 ISSO FAZ A FOTO VOLTAR A APARECER
         img.src = caminho;
         legenda.innerText = titulo;
         modal.style.display = 'flex';
     }
+};
+
+// -------------------------------------------------------------
+// 🚀 FUNÇÃO "BY FACE" (MANTIDA ORIGINAL)
+// -------------------------------------------------------------
+window.abrirModalByFace = function(eq) {
+    const modal = document.getElementById('modalFoto');
+    const img = document.getElementById('imagemAmpliada');
+    const legenda = document.getElementById('legendaFoto');
+
+    if (!modal) return;
+    img.style.display = 'none'; // Esconde a foto para mostrar as portas
+    
+    const totalPortas = eq.totalPortas || (eq.portas ? eq.portas.length : 0);
+    let htmlPortas = `<div class="grid-portas">`;
+    
+    for (let i = 1; i <= totalPortas; i++) {
+        const pDados = eq.portas ? eq.portas.find(p => p.p == i) : null;
+        const cor = (pDados && pDados.status === 'ocupada') ? '#22c55e' : '#475569';
+        const rota = (pDados && pDados.rota) ? pDados.rota : "Disponível/Vaga";
+
+        htmlPortas += `
+            <div class="porta" 
+                 style="background:${cor}" 
+                 title="Porta ${i}: ${rota}"> 
+                ${i}
+            </div>`;
+    }
+    htmlPortas += `</div>`;
+
+    legenda.innerHTML = `
+        <h3 style="color:#00d2ff; margin-bottom:10px;">🔍 ${eq.nome}</h3>
+        <p style="text-align:left; color:white; font-size:14px; white-space: pre-line;">${eq.desc || ''}</p>
+        <div style="margin-top:20px; text-align:left;">
+            <strong style="color:#0ea5e9;">🌐 Painel Frontal (${totalPortas} Portas):</strong>
+            ${htmlPortas}
+        </div>
+    `;
+
+    modal.style.display = 'flex';
 };
 
 window.fecharModalFoto = function() {
@@ -185,53 +262,57 @@ window.fecharModalFoto = function() {
     if (modal) modal.style.display = 'none';
 };
 
-// 🔗 FUNÇÃO DE NAVEGAÇÃO
+// -------------------------------------------------------------
+// 4. FUNÇÃO DE NAVEGAÇÃO (MANTIDA ORIGINAL)
+// -------------------------------------------------------------
 window.showPage = function(pageId) {
-    // 🔍 Converte o nome para minúsculo para não ter erro de digitação
     const idSujo = pageId.toLowerCase();
-    console.log("Abrindo: " + idSujo);
 
-    // 🔒 A TRAVA (Protege 'acessopops' e 'equipamentosPage')
     if (idSujo === 'acessopops' || idSujo === 'equipamentospage') {
         const senha = prompt("🔒 Acesso Restrito. Digite a senha ADM:");
-        
         if (senha !== "123") {
             alert("❌ Senha incorreta! Acesso negado.");
-            return; // Bloqueia tudo aqui
+            return;
+        }
+    }
+    // Esconde todas as páginas e mostra a selecionada
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(pageId);
+    if (target) target.classList.add('active');
+};
+// ==============================================================
+// 4. FUNÇÃO DE NAVEGAÇÃO (Com trava de segurança)
+// ==============================================================
+window.showPage = function(pageId) {
+    const idSujo = pageId.toLowerCase();
+
+    if (idSujo === 'acessopops' || idSujo === 'equipamentospage') {
+        const senha = prompt("🔒 Acesso Restrito. Digite a senha ADM:");
+        if (senha !== "123") {
+            alert("❌ Senha incorreta! Acesso negado.");
+            return;
         }
     }
 
-    // 🚀 NAVEGAÇÃO (Se a senha estiver certa, ele continua aqui)
-    // Esconde todas as páginas
+    // Esconde todas as seções
     document.querySelectorAll('.page, .page-content, .content-section').forEach(p => {
         p.style.display = 'none';
     });
 
-    // Mostra a página que você clicou (o pageId original)
+    // Mostra a selecionada
     const target = document.getElementById(pageId);
     if (target) {
         target.style.display = 'block';
-    } else {
-        console.error("Erro: Não encontrei a DIV com o ID '" + pageId + "'");
     }
 
-    // GATILHOS EXTRAS
-    if (idSujo === 'equipamentospage') {
-        if (typeof carregarTabelaEquipamentos === 'function') carregarTabelaEquipamentos();
+    // Gatilhos extras (Gráficos e Tabelas)
+    if (idSujo === 'equipamentospage' && typeof carregarTabelaEquipamentos === 'function') {
+        carregarTabelaEquipamentos();
     }
-    
-    // Se voltar para a Home, reinicia os gráficos
-    if (idSujo === 'homepage' || idSujo === 'dashboardpage') {
-        if (typeof initCharts === 'function') initCharts();
+    if ((idSujo === 'homepage' || idSujo === 'dashboardpage') && typeof initCharts === 'function') {
+        initCharts();
     }
 };
-// ==============================================================
-// 1. Função de Limpeza Profunda (Normalização)
-// 🛠️ FUNÇÃO AUXILIAR: Extrai o ID (Ex: ES-ACZ-A01) para não haver erro de nome
-function extrairID(nome) {
-    if (!nome) return "";
-    return nome.split(/[\s\(]/)[0].toUpperCase().trim();
-}
 
 function carregarPops() {
     const tbody = document.querySelector("#tabelaPops tbody");

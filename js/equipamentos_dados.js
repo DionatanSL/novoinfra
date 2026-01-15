@@ -1,51 +1,69 @@
 window.bancoEquipamentos = {
     "ES-GRI-A01": {
         "Rack 01 Equipamentos": {
-            "tamanho": 44, // ✅ Agora dentro do rack correto
+            "tamanho": 44, 
             "foto": "img/gria1.jpeg",
             "equipamentos": [
-                { u: 44, nome: "Patch Panel", tipo: "passivo" },
-                { u: 42, nome: "Switch Core", tipo: "rede" }
+                // 🔹 MODELO DGO (Grade 12x12)
+                { 
+                    u: 1, 
+                    nome: "DGO 144 Fibras", 
+                    tipo: "passivo", 
+                    tamanhoU: 4, 
+                    totalPortas: 144, // 👈 Altere aqui para mudar o tamanho da grade
+                    desc: "📍 Distribuidor Geral Óptico Central",
+                    portas: [
+                        { p: 1, status: "ocupada", rota: "Cabo 48F - Fibra 01 (Rota Mar)" },
+                        { p: 13, status: "ocupada", rota: "Cabo 48F - Fibra 13 (Rota Terra)" }
+                    ]
+                },
+
+                // 🔹 MODELO SWITCH (Horizontal)
+                { 
+                    u: 5, 
+                    nome: "Switch Huawei 24P", 
+                    tipo: "rede", 
+                    tamanhoU: 1, 
+                    totalPortas: 24, // 👈 Altere para 24, 48, etc.
+                    desc: "📊 Switch de Acesso - Core",
+                    portas: [
+                        { p: 1, status: "ocupada", rota: "Uplink Fibra - Porta 01" },
+                        { p: 10, status: "ocupada", rota: "Servidor Proxmox - Porta 10" }
+                    ]
+                }
             ]
         },
 
         "Rack 02 Elétrico": {
-            "tamanho": 12, // ✅ Correto
+            "tamanho": 12,
             "foto": "img/gria1eletr.jpeg",
             "equipamentos": [
-                { u: 12, nome: "DIO Centralx", tipo: "passivo" }, // ⚠️ Mudei de 44 para 12 para caber no rack
-                { u: 10, nome: "Retificadora", tipo: "dc" }
-            ]
-        }
-    },
-
-    "SC-FLN-A01": {
-        "Rack 01 - Principal": {
-            "tamanho": 44,
-            "foto": "https://link-da-foto-aqui.com",
-            "equipamentos": [
-                { u: 44, nome: "DIO 24F", tipo: "passivo" },
-                { u: 40, nome: "OLT HUAWEI", tipo: "rede" },
-                { u: 10, nome: "RETIFICADORA", tipo: "dc" }
-            ]
-        },
-        "Rack 02 - Baterias": {
-            "tamanho": 12,
-            "foto": "",
-            "equipamentos": [
-                { u: 10, nome: "BANCO 01", tipo: "energia" },
-                { u: 5, nome: "BANCO 02", tipo: "energia" }
-            ]
-        }
-    },
-
-    "PR-CUR-B02": {
-        "Rack Unico": {
-            "tamanho": 44, // ✅ Agora dentro do rack correto
-            "foto": "",
-            "equipamentos": [
-                { u: 44, nome: "PATCH PANEL", tipo: "passivo" }
+                // 🔹 MODELO ELÉTRICO (Disjuntores)
+                { 
+                    u: 1, 
+                    nome: "Retificadora XPS", 
+                    tipo: "dc", 
+                    tamanhoU: 2, 
+                    totalPortas: 10, // 👈 Aqui define quantos disjuntores aparecem
+                    desc: "⚡ Sistema de Energia -48V DC",
+                    portas: [
+                        { p: 1, status: "ocupada", rota: "Disjuntor 01: Switch Core" },
+                        { p: 2, status: "ocupada", rota: "Disjuntor 02: OLT Huawei" }
+                    ]
+                },
+                { 
+                    u: 4, 
+                    nome: "Régua AC", 
+                    tipo: "energia", 
+                    tamanhoU: 1, 
+                    totalPortas: 8, // 👈 8 tomadas
+                    desc: "🔌 Tomadas 127V/220V",
+                    portas: [
+                        { p: 1, status: "ocupada", rota: "Tomada 01: Monitor" }
+                    ]
+                }
             ]
         }
     }
 };
+//   Modelo de DGO,totalPortas,Visual no Sistema 144,96,72,48,36,24,12//
