@@ -76,99 +76,13 @@ style.innerHTML = `
 `;
 document.head.appendChild(style);
 
-// 📋 FUNÇÃO 1: MOSTRAR LISTA DE NOMES (POPS)
-// 1. LISTA DE CIDADES (POPS) - Igual ao seu, mas chama o Menu de Racks
+// 1. LISTA DE CIDADES (POPS)
 function carregarTabelaEquipamentos() {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     if (!container) return;
 
-    btnVoltar.style.display = "none";
-    container.innerHTML = ""; 
-
-    const dados = window.bancoEquipamentos || {};
-    const pops = Object.keys(dados);
-
-    if (pops.length === 0) {
-        container.innerHTML = "<p>Nenhum POP encontrado no banco de dados.</p>";
-        return;
-    }
-
-    pops.forEach(pop => {
-        const btn = document.createElement("button");
-        btn.className = "btn-pop";
-        btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Selecionar Racks ➔</span>`;
-        // MUDANÇA AQUI: Agora ele chama mostrarMenuRacks
-        btn.onclick = () => mostrarMenuRacks(pop);
-        container.appendChild(btn);
-    });
-}
-
-// 2. NOVA FUNÇÃO: MENU DE RACKS (Cria os botões Rack 1, Rack 2...)
-function mostrarMenuRacks(pop) {
-    const container = document.getElementById("conteudoEquipamentos");
-    const btnVoltar = document.getElementById("btnVoltarRack");
-    
-    btnVoltar.style.display = "block";
-    btnVoltar.onclick = () => carregarTabelaEquipamentos(); // Botão voltar volta para as cidades
-
-    container.innerHTML = `<h4 class="text-center mb-4" style="color:#00d2ff">Selecione o Rack em ${pop}</h4>`;
-    
-    // Pega os nomes dos racks cadastrados para essa cidade
-    const racksDaCidade = window.bancoEquipamentos[pop] || {};
-    const nomesDosRacks = Object.keys(racksDaCidade);
-
-    nomesDosRacks.forEach(nomeRack => {
-        const btn = document.createElement("button");
-        btn.className = "btn-pop";
-        btn.style.borderLeft = "4px solid #00d2ff";
-        btn.innerHTML = `<strong>🗄️ ${nomeRack}</strong>`;
-        // Ao clicar no rack, aí sim ele desenha o 44U
-        btn.onclick = () => desenharRack44U(pop, nomeRack);
-        container.appendChild(btn);
-    });
-}
-
-// 3. FUNÇÃO DE DESENHO: O RACK 44U DETALHADO (O "Visual Lindo")
-function desenharRack44U(pop, nomeRack) {
-    const container = document.getElementById("conteudoEquipamentos");
-    const btnVoltar = document.getElementById("btnVoltarRack");
-    
-    // Faz o botão voltar retornar para a lista de racks daquela cidade
-    btnVoltar.onclick = () => mostrarMenuRacks(pop);
-
-    container.innerHTML = `
-        <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${pop}</h4>
-        <h5 style="text-align:center; color:#94a3b8; margin-bottom:20px;">${nomeRack}</h5>
-    `;
-
-    const moldura = document.createElement("div");
-    moldura.className = "rack-frame"; // A moldura que dá o estilo profissional
-
-    // Acessa os equipamentos dentro da estrutura nova: [Cidade][Rack]
-    const equipamentos = window.bancoEquipamentos[pop][nomeRack] || [];
-
-    for (let u = 44; u >= 1; u--) {
-        const eq = equipamentos.find(e => e.u === u);
-        const row = document.createElement("div");
-        row.className = "u-row" + (eq ? ` tipo-${eq.tipo}` : "");
-        
-        row.innerHTML = `
-            <div class="u-idx">${u}</div>
-            <div class="u-info">${eq ? eq.nome : "—"}</div>
-        `;
-        moldura.appendChild(row);
-    }
-    container.appendChild(moldura);
-}
-
-// 1. LISTA DE CIDADES (Igual ao seu, mas chama mostrarMenuRacks)
-function carregarTabelaEquipamentos() {
-    const container = document.getElementById("conteudoEquipamentos");
-    const btnVoltar = document.getElementById("btnVoltarRack");
-    if (!container) return;
-
-    btnVoltar.style.display = "none";
+    if (btnVoltar) btnVoltar.style.display = "none";
     container.innerHTML = ""; 
 
     const dados = window.bancoEquipamentos || {};
@@ -176,23 +90,23 @@ function carregarTabelaEquipamentos() {
         const btn = document.createElement("button");
         btn.className = "btn-pop";
         btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Selecionar Racks ➔</span>`;
-        // MUDANÇA: Agora chama o menu de racks
         btn.onclick = () => mostrarMenuRacks(pop);
         container.appendChild(btn);
     });
 }
 
-// 2. FUNÇÃO INTERMEDIÁRIA (Cria os botões Rack 1, Rack 2...)
+// 2. MENU DE RACKS (Cria os botões Rack 1, Rack 2...)
 function mostrarMenuRacks(pop) {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     
-    btnVoltar.style.display = "block";
-    btnVoltar.onclick = () => carregarTabelaEquipamentos(); // Volta para cidades
+    if (btnVoltar) {
+        btnVoltar.style.display = "block";
+        btnVoltar.onclick = () => carregarTabelaEquipamentos();
+    }
 
     container.innerHTML = `<h4 class="text-center mb-4" style="color:#00d2ff">Racks em ${pop}</h4>`;
     
-    // Pega os nomes dos racks daquela cidade
     const racks = window.bancoEquipamentos[pop] || {};
     
     Object.keys(racks).forEach(nomeRack => {
@@ -200,31 +114,34 @@ function mostrarMenuRacks(pop) {
         btn.className = "btn-pop";
         btn.style.borderLeft = "4px solid #00d2ff";
         btn.innerHTML = `<strong>🗄️ ${nomeRack}</strong>`;
-        // Chama o desenho passando CIDADE e RACK
-        btn.onclick = () => desenharRack44U(pop, nomeRack);
+        // Chamando a função de desenho flexível
+        btn.onclick = () => desenharRack(pop, nomeRack);
         container.appendChild(btn);
     });
 }
 
-// 3. DESENHO DO RACK (Versão com Pop-up de Foto)
-function desenharRack44U(pop, nomeRack) {
+// 3. DESENHO DO RACK (Aceita 12U, 44U e Foto)
+function desenharRack(pop, nomeRack) {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     
-    btnVoltar.style.display = "block";
-    btnVoltar.onclick = () => mostrarMenuRacks(pop);
+    if (btnVoltar) btnVoltar.onclick = () => mostrarMenuRacks(pop);
 
-    // Puxa os dados do rack selecionado
     const dadosRack = window.bancoEquipamentos[pop][nomeRack];
+    if (!dadosRack) return;
+
     const equipamentos = dadosRack.equipamentos || [];
     const linkFoto = dadosRack.foto;
+    
+    // 📏 BUSCA O TAMANHO (Se não tiver no banco, usa 44)
+    const totalU = parseInt(dadosRack.tamanho) || 44;
 
     container.innerHTML = `
         <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${pop}</h4>
-        <h5 style="text-align:center; color:#94a3b8; margin-bottom:15px;">${nomeRack}</h5>
+        <h5 style="text-align:center; color:#94a3b8; margin-bottom:15px;">${nomeRack} (${totalU}U)</h5>
     `;
 
-    // 📸 BOTÃO DA FOTO REAL (Agora chamando o Modal)
+    // Botão da Foto Modal
     if (linkFoto && linkFoto !== "") {
         container.innerHTML += `
             <div style="text-align:center; margin-bottom:20px;">
@@ -240,26 +157,22 @@ function desenharRack44U(pop, nomeRack) {
     const moldura = document.createElement("div");
     moldura.className = "rack-frame";
 
-    for (let u = 44; u >= 1; u--) {
+    // 🚀 O LOOP AGORA É DINÂMICO (Usa totalU em vez de 44 fixo)
+    for (let u = totalU; u >= 1; u--) {
         const eq = equipamentos.find(e => e.u === u);
         const row = document.createElement("div");
         row.className = "u-row" + (eq ? ` tipo-${eq.tipo}` : "");
-        
-        row.innerHTML = `
-            <div class="u-idx">${u}</div>
-            <div class="u-info">${eq ? eq.nome : "—"}</div>
-        `;
+        row.innerHTML = `<div class="u-idx">${u}</div><div class="u-info">${eq ? eq.nome : "—"}</div>`;
         moldura.appendChild(row);
     }
     container.appendChild(moldura);
 }
 
-// --- FUNÇÕES AUXILIARES DO MODAL ---
+// --- FUNÇÕES DO MODAL (MANTENHA ESTAS) ---
 window.abrirModalFoto = function(caminho, titulo) {
     const modal = document.getElementById('modalFoto');
     const img = document.getElementById('imagemAmpliada');
     const legenda = document.getElementById('legendaFoto');
-
     if (modal && img) {
         img.src = caminho;
         legenda.innerText = titulo;
