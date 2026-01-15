@@ -293,6 +293,13 @@
             </tbody>
     </table>
 </div>
+<div id="modalFoto" class="modal-foto-overlay" onclick="fecharModalFoto()">
+    <div class="modal-foto-container" onclick="event.stopPropagation()">
+        <span class="modal-foto-fechar" onclick="fecharModalFoto()">&times;</span>
+        <img id="imagemAmpliada" src="" alt="Foto do Rack">
+        <div id="legendaFoto" style="color: white; margin-top: 10px; font-weight: bold;"></div>
+    </div>
+</div>
 <style>
     .rack-frame {
     width: 350px; margin: 0 auto; background: #020617;

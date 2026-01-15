@@ -77,13 +77,14 @@ style.innerHTML = `
 document.head.appendChild(style);
 
 // 📋 FUNÇÃO 1: MOSTRAR LISTA DE NOMES (POPS)
+// 1. LISTA DE CIDADES (POPS) - Igual ao seu, mas chama o Menu de Racks
 function carregarTabelaEquipamentos() {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     if (!container) return;
 
     btnVoltar.style.display = "none";
-    container.innerHTML = ""; // Limpa tudo
+    container.innerHTML = ""; 
 
     const dados = window.bancoEquipamentos || {};
     const pops = Object.keys(dados);
@@ -96,26 +97,57 @@ function carregarTabelaEquipamentos() {
     pops.forEach(pop => {
         const btn = document.createElement("button");
         btn.className = "btn-pop";
-        btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Ver Rack 44U ➔</span>`;
-        btn.onclick = () => desenharRack44U(pop);
+        btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Selecionar Racks ➔</span>`;
+        // MUDANÇA AQUI: Agora ele chama mostrarMenuRacks
+        btn.onclick = () => mostrarMenuRacks(pop);
         container.appendChild(btn);
     });
 }
 
-// 🗄️ FUNÇÃO 2: DESENHAR O RACK
-function desenharRack44U(pop) {
+// 2. NOVA FUNÇÃO: MENU DE RACKS (Cria os botões Rack 1, Rack 2...)
+function mostrarMenuRacks(pop) {
     const container = document.getElementById("conteudoEquipamentos");
     const btnVoltar = document.getElementById("btnVoltarRack");
     
     btnVoltar.style.display = "block";
-    container.innerHTML = `<h4 style="text-align:center; color:#00d2ff; margin-bottom:20px;">Rack 44U - ${pop}</h4>`;
+    btnVoltar.onclick = () => carregarTabelaEquipamentos(); // Botão voltar volta para as cidades
+
+    container.innerHTML = `<h4 class="text-center mb-4" style="color:#00d2ff">Selecione o Rack em ${pop}</h4>`;
+    
+    // Pega os nomes dos racks cadastrados para essa cidade
+    const racksDaCidade = window.bancoEquipamentos[pop] || {};
+    const nomesDosRacks = Object.keys(racksDaCidade);
+
+    nomesDosRacks.forEach(nomeRack => {
+        const btn = document.createElement("button");
+        btn.className = "btn-pop";
+        btn.style.borderLeft = "4px solid #00d2ff";
+        btn.innerHTML = `<strong>🗄️ ${nomeRack}</strong>`;
+        // Ao clicar no rack, aí sim ele desenha o 44U
+        btn.onclick = () => desenharRack44U(pop, nomeRack);
+        container.appendChild(btn);
+    });
+}
+
+// 3. FUNÇÃO DE DESENHO: O RACK 44U DETALHADO (O "Visual Lindo")
+function desenharRack44U(pop, nomeRack) {
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    
+    // Faz o botão voltar retornar para a lista de racks daquela cidade
+    btnVoltar.onclick = () => mostrarMenuRacks(pop);
+
+    container.innerHTML = `
+        <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${pop}</h4>
+        <h5 style="text-align:center; color:#94a3b8; margin-bottom:20px;">${nomeRack}</h5>
+    `;
 
     const moldura = document.createElement("div");
-    moldura.className = "rack-frame";
+    moldura.className = "rack-frame"; // A moldura que dá o estilo profissional
 
-    const equipamentos = window.bancoEquipamentos[pop] || [];
+    // Acessa os equipamentos dentro da estrutura nova: [Cidade][Rack]
+    const equipamentos = window.bancoEquipamentos[pop][nomeRack] || [];
 
-    // Gerar as 44 Us
     for (let u = 44; u >= 1; u--) {
         const eq = equipamentos.find(e => e.u === u);
         const row = document.createElement("div");
@@ -130,36 +162,156 @@ function desenharRack44U(pop) {
     container.appendChild(moldura);
 }
 
-function voltarParaLista() {
-    carregarTabelaEquipamentos();
+// 1. LISTA DE CIDADES (Igual ao seu, mas chama mostrarMenuRacks)
+function carregarTabelaEquipamentos() {
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    if (!container) return;
+
+    btnVoltar.style.display = "none";
+    container.innerHTML = ""; 
+
+    const dados = window.bancoEquipamentos || {};
+    Object.keys(dados).forEach(pop => {
+        const btn = document.createElement("button");
+        btn.className = "btn-pop";
+        btn.innerHTML = `<strong>📍 ${pop}</strong> <span style="float:right; color:#00d2ff;">Selecionar Racks ➔</span>`;
+        // MUDANÇA: Agora chama o menu de racks
+        btn.onclick = () => mostrarMenuRacks(pop);
+        container.appendChild(btn);
+    });
 }
 
-// 🔗 FUNÇÃO DE NAVEGAÇÃO
-function showPage(id) {
-    document.querySelectorAll('.page, .page-content').forEach(p => p.style.display = 'none');
-    const target = document.getElementById(id);
-    if (target) {
-        target.style.display = 'block';
-        if (id === 'equipamentosPage') carregarTabelaEquipamentos();
-    }
+// 2. FUNÇÃO INTERMEDIÁRIA (Cria os botões Rack 1, Rack 2...)
+function mostrarMenuRacks(pop) {
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    
+    btnVoltar.style.display = "block";
+    btnVoltar.onclick = () => carregarTabelaEquipamentos(); // Volta para cidades
+
+    container.innerHTML = `<h4 class="text-center mb-4" style="color:#00d2ff">Racks em ${pop}</h4>`;
+    
+    // Pega os nomes dos racks daquela cidade
+    const racks = window.bancoEquipamentos[pop] || {};
+    
+    Object.keys(racks).forEach(nomeRack => {
+        const btn = document.createElement("button");
+        btn.className = "btn-pop";
+        btn.style.borderLeft = "4px solid #00d2ff";
+        btn.innerHTML = `<strong>🗄️ ${nomeRack}</strong>`;
+        // Chama o desenho passando CIDADE e RACK
+        btn.onclick = () => desenharRack44U(pop, nomeRack);
+        container.appendChild(btn);
+    });
 }
-function showPage(pageId) {
-    // 1. Esconde tudo que for página
+
+// 3. DESENHO DO RACK (Versão com Pop-up de Foto)
+function desenharRack44U(pop, nomeRack) {
+    const container = document.getElementById("conteudoEquipamentos");
+    const btnVoltar = document.getElementById("btnVoltarRack");
+    
+    btnVoltar.style.display = "block";
+    btnVoltar.onclick = () => mostrarMenuRacks(pop);
+
+    // Puxa os dados do rack selecionado
+    const dadosRack = window.bancoEquipamentos[pop][nomeRack];
+    const equipamentos = dadosRack.equipamentos || [];
+    const linkFoto = dadosRack.foto;
+
+    container.innerHTML = `
+        <h4 style="text-align:center; color:#00d2ff; margin-bottom:5px;">📍 ${pop}</h4>
+        <h5 style="text-align:center; color:#94a3b8; margin-bottom:15px;">${nomeRack}</h5>
+    `;
+
+    // 📸 BOTÃO DA FOTO REAL (Agora chamando o Modal)
+    if (linkFoto && linkFoto !== "") {
+        container.innerHTML += `
+            <div style="text-align:center; margin-bottom:20px;">
+                <button class="btn btn-sm" 
+                        style="background: #0ea5e9; color: white; font-weight: bold; border-radius: 20px; padding: 5px 20px; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"
+                        onclick="abrirModalFoto('${linkFoto}', '${pop} - ${nomeRack}')">
+                    📸 VER FOTO REAL DO RACK
+                </button>
+            </div>
+        `;
+    }
+
+    const moldura = document.createElement("div");
+    moldura.className = "rack-frame";
+
+    for (let u = 44; u >= 1; u--) {
+        const eq = equipamentos.find(e => e.u === u);
+        const row = document.createElement("div");
+        row.className = "u-row" + (eq ? ` tipo-${eq.tipo}` : "");
+        
+        row.innerHTML = `
+            <div class="u-idx">${u}</div>
+            <div class="u-info">${eq ? eq.nome : "—"}</div>
+        `;
+        moldura.appendChild(row);
+    }
+    container.appendChild(moldura);
+}
+
+// --- FUNÇÕES AUXILIARES DO MODAL ---
+window.abrirModalFoto = function(caminho, titulo) {
+    const modal = document.getElementById('modalFoto');
+    const img = document.getElementById('imagemAmpliada');
+    const legenda = document.getElementById('legendaFoto');
+
+    if (modal && img) {
+        img.src = caminho;
+        legenda.innerText = titulo;
+        modal.style.display = 'flex';
+    }
+};
+
+window.fecharModalFoto = function() {
+    const modal = document.getElementById('modalFoto');
+    if (modal) modal.style.display = 'none';
+};
+
+// 🔗 FUNÇÃO DE NAVEGAÇÃO
+window.showPage = function(pageId) {
+    // 🔍 Converte o nome para minúsculo para não ter erro de digitação
+    const idSujo = pageId.toLowerCase();
+    console.log("Abrindo: " + idSujo);
+
+    // 🔒 A TRAVA (Protege 'acessopops' e 'equipamentosPage')
+    if (idSujo === 'acessopops' || idSujo === 'equipamentospage') {
+        const senha = prompt("🔒 Acesso Restrito. Digite a senha ADM:");
+        
+        if (senha !== "123") {
+            alert("❌ Senha incorreta! Acesso negado.");
+            return; // Bloqueia tudo aqui
+        }
+    }
+
+    // 🚀 NAVEGAÇÃO (Se a senha estiver certa, ele continua aqui)
+    // Esconde todas as páginas
     document.querySelectorAll('.page, .page-content, .content-section').forEach(p => {
         p.style.display = 'none';
     });
 
-    // 2. Mostra a página desejada
+    // Mostra a página que você clicou (o pageId original)
     const target = document.getElementById(pageId);
     if (target) {
         target.style.display = 'block';
+    } else {
+        console.error("Erro: Não encontrei a DIV com o ID '" + pageId + "'");
     }
 
-    // 3. Se for equipamentos, preenche a tabela
-    if (pageId === 'equipamentosPage') {
-        carregarTabelaEquipamentos();
+    // GATILHOS EXTRAS
+    if (idSujo === 'equipamentospage') {
+        if (typeof carregarTabelaEquipamentos === 'function') carregarTabelaEquipamentos();
     }
-}
+    
+    // Se voltar para a Home, reinicia os gráficos
+    if (idSujo === 'homepage' || idSujo === 'dashboardpage') {
+        if (typeof initCharts === 'function') initCharts();
+    }
+};
 // ==============================================================
 // 1. Função de Limpeza Profunda (Normalização)
 // 🛠️ FUNÇÃO AUXILIAR: Extrai o ID (Ex: ES-ACZ-A01) para não haver erro de nome
