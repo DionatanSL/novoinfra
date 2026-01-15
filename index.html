@@ -35,23 +35,7 @@
 <div id="docMenu" class="submenu" style="display: none;">
     <li onclick="showPage('equipamentosPage')">🛠️ Equipamentos</li>
 </div>
-<div id="equipamentosPage" class="page-content" style="display: none; padding: 20px;">
-    <div class="card shadow-sm p-4" style="background: #1a2234; color: white; border-radius: 10px;">
-        <h3>🛠️ Documentação de Equipamentos</h3>
-        <div class="table-responsive mt-3">
-            <table class="table table-hover table-dark">
-                <thead>
-                    <tr>
-                        <th>📍 Nome do POP</th>
-                        <th>⚙️ Ação</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaDocCorpo">
-                    </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+
 
                 <li onclick="toggleSubMenu('popMenu')">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
                 <div id="popMenu" class="submenu">
@@ -71,6 +55,22 @@
             </div>
 
             <div class="content">
+                <div id="equipamentosPage" class="page-content" style="display: none; padding: 20px; width: 100%;">
+    <div class="card shadow-sm p-4" style="background: #1a2234; color: white; border-radius: 10px; margin: 20px;">
+        <h3 style="color: #00d2ff;">🛠️ Documentação de Equipamentos</h3>
+        <div class="table-responsive mt-3">
+            <table class="table table-hover table-dark" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>📍 Nome do POP</th>
+                        <th>⚙️ Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaDocCorpo"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
                 
                 <div id="home" class="page active">
   <h1 class="h4 mb-4 d-flex align-items-center gap-3" style="color: #00d2ff; font-weight: 800;">

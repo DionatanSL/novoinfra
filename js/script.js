@@ -49,6 +49,51 @@ window.showPage = function(pageId) {
 
 // ==============================================================
 // 📡 INVENTÁRIO DE POPS: MOTOR DINÂMICO DE AUDITORIA
+function carregarTabelaEquipamentos() {
+    const tbody = document.getElementById("tabelaDocCorpo");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    // Pega as chaves (nomes dos POPs) do seu banco manual
+    const dados = window.bancoEquipamentos || {};
+    const nomesDosPops = Object.keys(dados);
+
+    if (nomesDosPops.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="text-center text-warning">Aguardando dados de equipamentos_dados.js...</td></tr>';
+        return;
+    }
+
+    nomesDosPops.forEach(nome => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td style="color:white; padding: 12px;">📍 ${nome}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="abrirRack('${nome}')">
+                    Visualizar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+function showPage(pageId) {
+    // 1. Esconde tudo que for página
+    document.querySelectorAll('.page, .page-content, .content-section').forEach(p => {
+        p.style.display = 'none';
+    });
+
+    // 2. Mostra a página desejada
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.style.display = 'block';
+    }
+
+    // 3. Se for equipamentos, preenche a tabela
+    if (pageId === 'equipamentosPage') {
+        carregarTabelaEquipamentos();
+    }
+}
 // ==============================================================
 // 1. Função de Limpeza Profunda (Normalização)
 // 🛠️ FUNÇÃO AUXILIAR: Extrai o ID (Ex: ES-ACZ-A01) para não haver erro de nome
