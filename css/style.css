@@ -351,3 +351,59 @@ td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     z-index: 10;
     position: relative;
 }
+/* Layout do Chassi (Nível 1) */
+.chassi-layout {
+    display: flex;
+    gap: 2px;
+    background: #e2e8f0;
+    padding: 20px;
+    border: 2px solid #64748b;
+    border-radius: 4px;
+    height: 350px;
+    overflow-x: auto;
+}
+
+.placa-vertical {
+    width: 45px;
+    height: 100%;
+    background: #4ade80; /* Verde idêntico à foto */
+    border: 1px solid #166534;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.placa-vertical.vazia { background: #f8fafc; border: 1px solid #cbd5e1; }
+.placa-vertical:hover { filter: brightness(1.05); }
+
+.placa-nome-v {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 15px;
+    color: #064e3b;
+}
+
+/* Layout de Detalhe da Placa (Nível 2) */
+.placa-detalhe-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 250px; /* Portas | Info | Botões */
+    gap: 20px;
+    background: #f1f5f9;
+    padding: 20px;
+    border-radius: 8px;
+    color: #1e293b;
+}
+
+.btn-gerencia {
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: 1px solid #94a3b8;
+    margin-bottom: 2px;
+    font-size: 11px;
+    padding: 3px 8px;
+}

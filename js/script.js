@@ -281,39 +281,46 @@ window.showPage = function(pageId) {
     if (target) target.classList.add('active');
 };
 // ==============================================================
-// 4. FUNÇÃO DE NAVEGAÇÃO (Com trava de segurança)
+/// ==============================================================
+// 4. FUNÇÃO DE NAVEGAÇÃO (Versão Unificada com Trava DWDM)
 // ==============================================================
 window.showPage = function(pageId) {
-    const idSujo = pageId.toLowerCase();
+    const idSujo = pageId.toLowerCase().trim();
 
-    if (idSujo === 'acessopops' || idSujo === 'equipamentospage') {
+    // 🔒 1. TRAVA DE SEGURANÇA: Lista de IDs que pedem senha
+    const paginasPrivadas = ['acessopops', 'equipamentospage', 'dwdmpage'];
+
+    if (paginasPrivadas.includes(idSujo)) {
         const senha = prompt("🔒 Acesso Restrito. Digite a senha ADM:");
+        
         if (senha !== "123") {
             alert("❌ Senha incorreta! Acesso negado.");
-            return;
+            return; // 🛑 Cancela a execução e não mostra a página
         }
     }
 
-    // Esconde todas as seções
+    // 📋 2. LIMPEZA: Esconde todas as seções antes de mostrar a nova
     document.querySelectorAll('.page, .page-content, .content-section').forEach(p => {
         p.style.display = 'none';
     });
 
-    // Mostra a selecionada
+    // 📺 3. EXIBIÇÃO: Mostra a página selecionada
     const target = document.getElementById(pageId);
     if (target) {
         target.style.display = 'block';
     }
 
-    // Gatilhos extras (Gráficos e Tabelas)
+    // 🚀 4. GATILHOS EXTRAS (Gráficos e Tabelas)
+    // Carrega a tabela se for a página de equipamentos
     if (idSujo === 'equipamentospage' && typeof carregarTabelaEquipamentos === 'function') {
         carregarTabelaEquipamentos();
     }
+    
+    // Inicia os gráficos se for a home ou dashboard
     if ((idSujo === 'homepage' || idSujo === 'dashboardpage') && typeof initCharts === 'function') {
         initCharts();
     }
 };
-
 function carregarPops() {
     const tbody = document.querySelector("#tabelaPops tbody");
     if (!tbody || !window.popsList) return;
@@ -383,6 +390,210 @@ function copiarLinkMaps(lat, lng) {
 }
 
 // --- FUNÇÕES DE AÇÃO ---
+// --- FUNÇÃO DE NAVEGAÇÃO ---
+// ==============================================================
+// 4. FUNÇÃO DE NAVEGAÇÃO MESTRE (Com todos os gatilhos)
+// ==============================================================
+// ==============================================================
+// 1. NAVEGAÇÃO PRINCIPAL E SEGURANÇA
+// ==============================================================
+window.showPage = function(pageId) {
+    const idSujo = pageId.toLowerCase().trim();
+    const paginasProtegidas = ['acessopops', 'equipamentospage', 'dwdmpage'];
+
+    if (paginasProtegidas.includes(idSujo)) {
+        const senha = prompt("🔒 Acesso Restrito. Digite a senha ADM:");
+        if (senha !== "123") {
+            alert("❌ Senha incorreta! Acesso negado.");
+            return;
+        }
+    }
+
+    document.querySelectorAll('.page, .page-content, .content-section').forEach(p => {
+        p.style.display = 'none';
+    });
+
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.style.display = 'block';
+    }
+
+    // Gatilhos específicos de carregamento
+    if (idSujo === 'dwdmpage') {
+        listarLocaisDWDM(); 
+    }
+    if (idSujo === 'equipamentospage' && typeof carregarTabelaEquipamentos === 'function') {
+        carregarTabelaEquipamentos();
+    }
+    if ((idSujo === 'home' || idSujo === 'dashboardpage') && typeof initCharts === 'function') {
+        initCharts();
+    }
+};
+
+// ==============================================================
+// 2. NÍVEL 1: HUB DE SELEÇÃO (CARDS DOS POPS)
+// ==============================================================
+window.listarLocaisDWDM = function() {
+    const container = document.getElementById('conteudoDWDM');
+    if (!container) return;
+
+    if (!window.bancoDWDM || Object.keys(window.bancoDWDM).length === 0) {
+        container.innerHTML = '<p class="text-center text-secondary">Nenhum chassi DWDM cadastrado.</p>';
+        return;
+    }
+
+    let html = `
+        <div style="text-align: left; margin-bottom: 20px;">
+            <p class="text-secondary">Selecione a unidade para gerência modular:</p>
+        </div>
+        <div class="row g-4">`;
+
+    Object.keys(window.bancoDWDM).forEach(idChassi => {
+        const chassi = window.bancoDWDM[idChassi];
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card-pop-selecao" onclick="renderizarChassiDWDM('${idChassi}')">
+                    <div class="card-pop-header">
+                        <span style="color: #22c55e; font-size: 10px; font-weight: bold;">● STATUS: ONLINE</span>
+                        <i class="fas fa-microchip" style="color: #0ea5e9; font-size: 1.2rem;"></i>
+                    </div>
+                    <div class="card-pop-body" style="text-align: left; margin-top: 15px;">
+                        <small style="color: #0ea5e9; font-weight: bold; font-size: 10px; text-transform: uppercase;">Unidade Operacional</small>
+                        <h4 style="color: white; margin: 5px 0; font-weight: 800;">${chassi.pop}</h4>
+                        <p style="color: #94a3b8; font-size: 12px; margin: 0;">${chassi.nome}</p>
+                    </div>
+                    <div class="card-pop-footer">
+                        <span>ABRIR LAYOUT DE PLACAS</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>`;
+    });
+
+    html += `</div>
+        <style>
+            .card-pop-selecao { background: #1e293b; border-left: 5px solid #0ea5e9; border-radius: 8px; padding: 20px; cursor: pointer; transition: 0.3s; border: 1px solid #334155; }
+            .card-pop-selecao:hover { transform: translateY(-5px); background: #2d3748; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: #0ea5e9; }
+            .card-pop-header { display: flex; justify-content: space-between; align-items: center; }
+            .card-pop-footer { margin-top: 20px; padding-top: 15px; border-top: 1px solid #334155; display: flex; justify-content: space-between; color: #0ea5e9; font-size: 11px; font-weight: bold; }
+        </style>`;
+
+    container.innerHTML = html;
+};
+
+// ==============================================================
+// 3. NÍVEL 2: VISÃO DO CHASSI (LAYOUT MODULAR)
+// ==============================================================
+window.renderizarChassiDWDM = function(idChassi) {
+    const container = document.getElementById('conteudoDWDM');
+    const chassi = window.bancoDWDM[idChassi];
+    if (!chassi) return;
+
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="listarLocaisDWDM()" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-chevron-left"></i> Voltar para Seleção
+            </button>
+            <h5 style="color: white; margin: 0;">${chassi.pop} | <span style="color:#94a3b8; font-size: 14px;">${chassi.nome}</span></h5>
+        </div>
+        <div class="chassi-container-modular">
+    `;
+
+    for (let i = 1; i <= chassi.totalSlots; i++) {
+        const slot = chassi.slots[i];
+        if (slot) {
+            html += `
+                <div class="placa-slot-ativa" onclick='abrirDetalhePlaca(${JSON.stringify(slot)}, ${i}, "${idChassi}")'>
+                    <div class="led-status-on"></div>
+                    <span class="nome-placa-v">${slot.placa}</span>
+                    <span class="num-slot-v">${i}</span>
+                </div>`;
+        } else {
+            html += `<div class="placa-slot-vazia"><span class="num-slot-v">${i}</span></div>`;
+        }
+    }
+
+    html += `</div>
+        <style>
+            .chassi-container-modular { display: flex; gap: 4px; background: #cbd5e1; padding: 15px; border: 4px solid #475569; border-radius: 8px; height: 320px; overflow-x: auto; }
+            .placa-slot-ativa { width: 45px; height: 100%; background: #4ade80; border: 1px solid #166534; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
+            .placa-slot-ativa:hover { filter: brightness(1.1); transform: scale(1.02); }
+            .placa-slot-vazia { width: 45px; height: 100%; background: #f1f5f9; border: 1px solid #cbd5e1; display: flex; align-items: flex-end; justify-content: center; opacity: 0.6; }
+            .led-status-on { width: 8px; height: 8px; background: #0f0; border-radius: 50%; margin-top: 5px; box-shadow: 0 0 5px #0f0; }
+            .nome-placa-v { writing-mode: vertical-rl; font-size: 10px; font-weight: bold; margin-top: 15px; color: #064e3b; }
+            .num-slot-v { margin-top: auto; font-size: 10px; font-weight: bold; padding-bottom: 5px; color: #064e3b; }
+        </style>`;
+
+    container.innerHTML = html;
+};
+
+// ==============================================================
+// 4. NÍVEL 3: DETALHE DA PLACA E BOTÕES DE AÇÃO (NMS)
+// ==============================================================
+window.abrirDetalhePlaca = function(slot, num, idChassi) {
+    const container = document.getElementById('conteudoDWDM');
+    
+    let html = `
+        <div style="text-align: left; margin-bottom: 15px;">
+            <button onclick="renderizarChassiDWDM('${idChassi}')" class="btn btn-sm btn-secondary">
+                <i class="fas fa-chevron-left"></i> Voltar ao Chassi
+            </button>
+        </div>
+
+        <div class="detalhe-placa-grid">
+            <div class="col-portas-v">
+                <span class="label-portas">Interfaces</span>
+                ${slot.portas && slot.portas.length > 0 ? slot.portas.map(p => `
+                    <div title="${p.rota || 'Disponível'}" class="porta-box ${p.status === 'ocupada' ? 'status-ocu' : 'status-liv'}">
+                        P${p.p}
+                    </div>
+                `).join('') : '<small style="color:#94a3b8">N/A</small>'}
+            </div>
+
+            <div style="text-align: left;">
+                <h4 style="margin: 0; color: #0ea5e9; font-weight: bold;">Slot ${num}: ${slot.placa}</h4>
+                <hr style="border-top: 1px solid #cbd5e1; margin: 15px 0;">
+                <p style="font-size: 14px;"><strong>📋 Descrição:</strong> ${slot.desc || 'Módulo DWDM'}</p>
+                <p style="font-size: 14px;"><strong>📍 Observação:</strong> ${slot.remark || 'N/A'}</p>
+                <div class="estado-fisico">
+                    <small>Estado Físico:</small><br>
+                    <strong style="color: #22c55e;">Instalada / Operacional</strong>
+                </div>
+            </div>
+
+            <div class="col-acoes-nms">
+                <button class="btn-nms-action" onclick="executarAcaoNMS('Alarmes', '${slot.placa}')">Browse Current Alarms</button>
+                <button class="btn-nms-action" onclick="executarAcaoNMS('Performance', '${slot.placa}')">WDM Performance Browse</button>
+                <button class="btn-nms-action" onclick="executarAcaoNMS('Configuração', '${slot.placa}')">WDM Configuration</button>
+                <button class="btn-nms-action" onclick="executarAcaoNMS('Caminho Óptico', '${slot.placa}')">Path View</button>
+                <button class="btn-nms-action" onclick="executarAcaoNMS('Versão Software', '${slot.placa}')">Board Software Version</button>
+            </div>
+        </div>
+
+        <style>
+            .detalhe-placa-grid { display: grid; grid-template-columns: 110px 1fr 280px; gap: 20px; background: #f8fafc; padding: 25px; border-radius: 8px; border-left: 10px solid #4ade80; color: #1e293b; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .col-portas-v { display: flex; flex-direction: column; gap: 4px; border-right: 1px solid #cbd5e1; padding-right: 15px; max-height: 350px; overflow-y: auto; }
+            .label-portas { font-size: 10px; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+            .porta-box { color: white; font-size: 10px; padding: 5px; text-align: center; border-radius: 2px; font-weight: bold; }
+            .status-ocu { background: #22c55e; }
+            .status-liv { background: #94a3b8; }
+            .estado-fisico { margin-top: 30px; padding: 10px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0; }
+            .col-acoes-nms { display: flex; flex-direction: column; gap: 6px; }
+            .btn-nms-action { background: white; border: 1px solid #cbd5e1; padding: 8px; font-size: 12px; text-align: left; cursor: pointer; transition: 0.2s; color: #334155; font-weight: 500;}
+            .btn-nms-action:hover { background: #f1f5f9; border-color: #0ea5e9; color: #0ea5e9; padding-left: 12px; }
+        </style>
+    `;
+    container.innerHTML = html;
+};
+
+// ==============================================================
+// 5. FUNÇÃO DE PROCESSAMENTO DE AÇÕES (SIMULADOR NMS)
+// ==============================================================
+window.executarAcaoNMS = function(tipo, placa) {
+    // Aqui você pode integrar com seu backend futuramente
+    console.log(`Solicitando ${tipo} para a placa ${placa}`);
+    alert(`[GERÊNCIA DWDM]\n\nAção: ${tipo}\nAlvo: Placa ${placa}\n\nStatus: Buscando informações em tempo real no equipamento...`);
+};
 
 function acionarFocoMapa(idPop) {
     // Busca o marcador real dentro do objeto de marcadores do Leaflet usando o ID
