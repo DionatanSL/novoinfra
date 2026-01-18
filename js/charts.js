@@ -1,26 +1,33 @@
-function initCharts() {
-    if (graficoVdc) graficoVdc.destroy();
-    if (graficoTermico) graficoTermico.destroy();
+// Localize esta função no seu script.js
+function renderizarGraficoVdcDionatan() {
+    const canvas = document.getElementById('graficoVdc');
+    if (!canvas) return;
+
+    // 1. A BUSCA DEFINITIVA: Verifica se já existe um gráfico associado a este ID
+    const chartExistente = Chart.getChart("graficoVdc"); 
     
-    graficoVdc = new Chart(document.getElementById('graficoVdc'), { 
-        type: 'bar', 
-        data: { 
-            labels: energiaZTE.map(e => e.id.substring(0,8)), 
-            datasets: [{ 
+    // 2. Se existir, ele mata o gráfico antigo antes de continuar
+    if (chartExistente) {
+        chartExistente.destroy();
+    }
+
+    // 3. Agora o terreno está limpo para criar o novo
+    const dadosZTE = window.energiaZTE || [];
+    
+    window.meuChartVdc = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: dadosZTE.map(e => e.id.substring(0, 10)),
+            datasets: [{
                 label: 'Voltagem DC',
-                data: energiaZTE.map(e => parseFloat(e.dc.replace(' V', ''))), 
-                backgroundColor: '#00c3ff' 
-            }] 
-        }, 
-        options: { 
+                data: dadosZTE.map(e => parseFloat(e.dc.replace(' V', '').replace(',', '.')) || 0),
+                backgroundColor: '#00d2ff'
+            }]
+        },
+        options: {
+            responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } }
-        } 
-    });
-
-    graficoTermico = new Chart(document.getElementById('graficoTermico'), { 
-        type: 'doughnut', 
-        data: { labels: ['Normal', 'Alerta'], datasets: [{ data: [80, 20], backgroundColor: ['#10b981', '#f59e0b'] }] }, 
-        options: { maintainAspectRatio: false } 
+        }
     });
 }

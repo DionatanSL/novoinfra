@@ -42,6 +42,7 @@
                 <li onclick="toggleSubMenu('popMenu')">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
                 <div id="popMenu" class="submenu">
                     <li onclick="showPage('pops')">📑 Lista de POPs</li>
+                    <li class="li-zabbix" onclick="consultarAlarmesGeraisZabbix()">🚨 Alarmes Zabbix</li>
                     <li onclick="showPage('geradoresnobreaks')">🗄️ Geradores</li>
                     <li onclick="showPage('baterias')">🔋 Baterias</li>
                     <li onclick="showPage('energia')">⚡ Energia</li>
@@ -57,6 +58,30 @@
             </div>
 
             <div class="content">
+                <div id="modalZabbixGlobal" class="modal-zabbix">
+    <div class="modal-zabbix-content">
+        <div class="modal-zabbix-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="pulsar-alarme"></div>
+                <h3 style="margin:0; color:white; font-size:16px;">CENTRAL DE ALARMES ZABBIX</h3>
+            </div>
+            <button class="fechar-zabbix" onclick="fecharModalZabbix()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="lista-alarmes-zabbix" class="modal-zabbix-body">
+            <div style="text-align:center; padding: 40px;">
+                <p style="color:#94a3b8;">Sincronizando com 172.20.0.82...</p>
+            </div>
+        </div>
+
+        <div class="modal-zabbix-footer">
+            <span><i class="fas fa-network-wired"></i> Status: Conectado</span>
+            <span id="contador-alarmes" class="badge-contagem">0 Eventos</span>
+        </div>
+    </div>
+</div>
                 <div id="dwdmPage" class="page-content" style="display: none;">
     <div class="container-fluid">
         <h2 class="text-white mb-4">📟 Gerência DWDM Modular</h2>
@@ -123,6 +148,7 @@
             <div class="stat-info">
                 <span class="stat-label label-red">TEMPERATURA</span>
                 <span class="stat-value">ESTÁVEL</span>
+                
             </div>
         </div>
     </div>
@@ -137,31 +163,54 @@
         </div>
     </div>
 </div>
-<div id="secao-retificadoras" style="background: #0f172a; padding: 20px; border-radius: 10px; font-family: sans-serif;">
+<div id="secao-alarmes-zabbix"
+     style="background:#0f172a; padding:16px; border-radius:10px; overflow:hidden;">
+
+    <div id="carrossel-zabbix" class="carrossel-zabbix">
+        <div id="alarme-track"></div>
+    </div>
+
+</div>
+
     
    
 
-    <div id="container-alarme-ret" style="background: #1e293b; border: 2px solid #ef4444; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; min-height: 60px; margin-bottom: 20px;">
+   <div id="container-alarme-ret" style="background: #1e293b; border: 2px solid #ef4444; padding: 15px; border-radius: 10px; display: none; align-items: center; justify-content: center; min-height: 60px; margin-bottom: 20px;">
         <span id="texto-alarme-ret" style="color: #fff; font-weight: bold; font-size: 1.1rem; text-align: center;"></span>
     </div>
 
-    <div id="lista-retificadoras-corpo">
-        </div>
-</div>
+    <div id="lista-retificadoras-corpo"></div>
 
-                    <div class="row g-3">
-                        <div class="col-md-4"><div class="chart-box-container"><div class="text-title-yellow">Localização Geográfica</div><div id="mapa-container"></div></div></div>
-                        <div class="col-md-4">
-    <div class="chart-box-container text-center" style="height: 320px; display: flex; flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
-        <div class="text-title-yellow" style="margin-bottom: 5px;">Retificadoras</div>
-        <div id="container-grafico-vdc" style="flex: 1; position: relative; width: 100%; min-height: 200px;">
-            <canvas id="graficoVdc"></canvas>
-        </div>
-    </div>
-</div>
-                        <div class="col-md-4"><div class="chart-box-container text-center"><div class="text-title-yellow">Status Térmico</div><canvas id="graficoTermico"></canvas></div></div>
+    <div id="secao-home">
+        
+        <div class="row g-3">
+            
+            <div class="col-md-4">
+                <div class="chart-box-container">
+                    <div class="text-title-yellow">Localização Geográfica</div>
+                    <div id="mapa-container"></div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="chart-box-container text-center" style="height: 320px; display: flex; flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
+                    <div class="text-title-yellow" style="margin-bottom: 5px;">Retificadoras</div>
+                    <div id="container-grafico-vdc" style="flex: 1; position: relative; width: 100%; min-height: 200px;">
+                        <canvas id="graficoVdc"></canvas>
                     </div>
                 </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="chart-box-container text-center">
+                    <div class="text-title-yellow">Status Térmico</div>
+                    <canvas id="graficoTermico"></canvas>
+                </div>
+            </div>
+
+        </div> </div> </div> 
+
+
 
                 <div id="pops" class="page card-custom text-start">
                     <h2 class="h5 text-title-cyan">📡 POPs Operacionais (76)</h2>
@@ -338,6 +387,8 @@
 .u-dc { background: #064e3b !important; color: #4ade80; border-left: 4px solid #4ade80; }
 .u-passivo { background: #1e293b !important; color: #94a3b8; }
 </style>
+<div id="carrossel-zabbix" class="carrossel-zabbix"></div>
+
 
    <script src="js/data.js"></script>
     <script src="js/auth.js"></script>
@@ -350,3 +401,4 @@
     <script src="js/dwdm.js"></script> <script src="js/script.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    

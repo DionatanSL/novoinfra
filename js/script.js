@@ -16,7 +16,7 @@ function initUI() {
     setTimeout(() => { 
         initSearchDropdowns(); 
         initMap(); 
-        initCharts(); 
+       
     }, 150);
 }
 // Função específica para a nova tela de Documentação
@@ -390,6 +390,14 @@ function copiarLinkMaps(lat, lng) {
 }
 
 // --- FUNÇÕES DE AÇÃO ---
+// Função para fechar o modal da Central de Alarmes
+window.fecharModalZabbix = function() {
+    // Verifique se o ID no seu HTML é exatamente 'modalZabbixGlobal'
+    const modal = document.getElementById('modalZabbixGlobal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
 // --- FUNÇÃO DE NAVEGAÇÃO ---
 // ==============================================================
 // 4. FUNÇÃO DE NAVEGAÇÃO MESTRE (Com todos os gatilhos)
@@ -946,48 +954,11 @@ function initSearchDropdowns() {
     new Choices(tn, { searchEnabled: true, itemSelectText: '' });
     new Choices(tc, { searchEnabled: true, itemSelectText: '' });
 }
-// Agrupamento das bases fornecidas
-const todasAsFontes = [
-    ...energiaZTE, 
-    ...energiaHuawei, 
-    ...energiaCPS, 
-    ...energiaSPS, 
-    ...energiaXPS
-];
 
-let filaAlarmesAtivos = [];
+
 let indiceSlide = 0;
 
-function processarAlarmesTecnicos() {
-    let alertas = [];
 
-    todasAsFontes.forEach(item => {
-        // Conversão dos valores para números (remove o "V")
-        const vAC = item.ac === "---" ? null : parseFloat(item.ac);
-        const vDC = item.dc === "---" ? null : parseFloat(item.dc);
-
-        // 1. REGRA: FALHA DE AC (Se AC ou DC forem "---")
-        if (item.ac === "---" || item.dc === "---" || item.status === "❌ OFFLINE") {
-            alertas.push(`🔴 FALHA DE AC - ${item.id}`);
-        } 
-        
-        // 2. REGRA: DC FORA DO PADRÃO (Inferior a 53.0V)
-        else if (vDC !== null && vDC < 52.0) {
-            alertas.push(`⚠️ DC FORA DO PADRÃO - ${item.id} (${vDC}V)`);
-        }
-
-        // 3. REGRA: AC IRREGULAR (Gatilhos 127V e 220V)
-        if (vAC !== null) {
-            if (vAC > 50 && vAC < 150) { // Sistema 127V
-                if (vAC < 100 || vAC > 135) alertas.push(`⚡ AC 127V IRREGULAR - ${item.id} (${vAC}V)`);
-            } else if (vAC >= 150) { // Sistema 220V
-                if (vAC < 200 || vAC > 235) alertas.push(`⚡ AC 220V IRREGULAR - ${item.id} (${vAC}V)`);
-            }
-        }
-    });
-
-    filaAlarmesAtivos = alertas;
-}
 
 // Função de Busca (Filtra baseado no ID ou Status)
 function filtrarRetificadoras() {
@@ -1000,27 +971,7 @@ function filtrarRetificadoras() {
     });
 }
 
-// Função do Carrossel (3 segundos)
-function rotacionarDisplay() {
-    const display = document.getElementById("container-alarme-ret");
-    const label = document.getElementById("texto-alarme-ret");
 
-    if (filaAlarmesAtivos.length === 0) {
-        display.style.display = "none";
-        return;
-    }
-
-    display.style.display = "flex";
-    label.innerText = filaAlarmesAtivos[indiceSlide % filaAlarmesAtivos.length];
-    indiceSlide++;
-}
-
-// Inicialização
-setInterval(processarAlarmesTecnicos, 5000); // Atualiza alarmes a cada 5s
-setInterval(rotacionarDisplay, 3000);        // Troca slide a cada 3s
-
-// Execução imediata
-processarAlarmesTecnicos();
 
 // ==============================================================
 // 🌤️ RADAR METEOROLÓGICO: HG BRASIL WEATHER (SINCRO TOTAL)
@@ -1209,3 +1160,137 @@ inicializarPainelSeguro();
 
 // Executa novamente quando a página estiver 100% pronta
 window.addEventListener('load', inicializarPainelSeguro);
+// ==============================================================
+// ==============================================================
+// ⚡ MOTOR DO ZABBIX - VERSÃO FINAL (MAIÚSCULO + LOCAL)
+// ==============================================================
+(function() {
+    console.log("🚀 Iniciando Motor Zabbix (Maiúsculo + Local)...");
+    
+    // CONFIGURAÇÕES
+    const URL = 'https://monitoramento.dinamicatelecom.com.br/api_jsonrpc.php';
+    const TOKEN = 'f895cfe5bb1033e0c30d515a612b78975599843e058b4185cfbb45ff243b67f2';
+    const GRUPOS = ["FONTE CPS", "Fonte Huawei", "FONTE HUAWEI", "FONTE SPS", "FONTE XPS", "Fonte ZTE"];
+
+    let alarmes = [];
+    let ponteiro = 0;
+
+    // 1. BUSCA DADOS
+    async function buscar() {
+        try {
+            const r1 = await fetch(URL, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ jsonrpc: "2.0", method: "hostgroup.get", params: { output: ["groupid"], filter: { name: GRUPOS } }, auth: TOKEN, id: 1 })
+            });
+            const d1 = await r1.json();
+            const ids = d1.result?.map(g => g.groupid) || [];
+
+            if (ids.length > 0) {
+                const r2 = await fetch(URL, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        jsonrpc: "2.0", method: "trigger.get",
+                        params: { output: ["description", "priority"], selectHosts: ["name"], groupids: ids, filter: { value: 1 } }, auth: TOKEN, id: 1
+                    })
+                });
+                const d2 = await r2.json();
+                
+                // --- PROCESSAMENTO DOS DADOS ---
+                alarmes = (d2.result || []).map(a => ({
+                    // Transforma o nome do local em MAIÚSCULO
+                    host: a.hosts[0]?.name.toUpperCase(),
+                    
+                    // Limpa a mensagem e transforma em MAIÚSCULO
+                    msg: a.description
+                          .replace(/{HOST\.NAME}/g, '')
+                          .replace(/-{HOST\.CONN}/g, '')
+                          .replace(/{HOST\.CONN}/g, '')
+                          .trim()
+                          .toUpperCase(),
+                    priority: parseInt(a.priority)
+                }));
+                animar();
+            }
+        } catch (e) { console.warn("Zabbix Off", e); }
+    }
+
+    // 2. ANIMAÇÃO VISUAL
+    function animar() {
+        const card = document.getElementById("container-alarme-ret");
+        const texto = document.getElementById("texto-alarme-ret");
+        
+        if (!card || !texto) return;
+
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.justifyContent = 'center';
+
+        if (alarmes.length === 0) {
+            // --- TUDO NORMAL ---
+            card.className = "stat-card-slim estado-normal"; 
+            card.style.border = "";
+            card.style.backgroundColor = "";
+
+            texto.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-check-circle" style="font-size:1.4rem; color:#10b981;"></i>
+                    <div style="text-align:left;">
+                        <span style="display:block; font-size:9px; color:#cbd5e1; opacity:0.8;">REDE ELÉTRICA</span>
+                        <span style="font-size:13px; color:#10b981; font-weight:900; letter-spacing:0.5px;">OPERACIONAL</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // --- MODO ALARME (CRÍTICO) ---
+            card.className = "stat-card-slim estado-critico";
+
+            const item = alarmes[ponteiro % alarmes.length];
+            const icones = ["ℹ️", "⚡", "⚠️", "🔥", "🚨", "☠️"];
+            const icone = icones[item.priority] || "⚠️";
+
+            // AQUI JUNTA: LOCAL - MENSAGEM (TUDO MAIÚSCULO)
+            texto.innerHTML = `
+                <div style="display:flex; align-items:center; width:100%; gap: 10px;">
+                    <div style="font-size:1.6rem;">${icone}</div>
+                    <div style="text-align:left; overflow:hidden;">
+                        <div class="zbx-msg" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; font-size: 12px; line-height: 1.2;">
+                            <span style="color: #38bdf8; font-weight: 900;">${item.host}</span><br>
+                            <span style="color: #ffffff;">${item.msg}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            ponteiro++;
+        }
+    }
+
+    // 3. FUNÇÕES GLOBAIS (MODAL)
+    window.consultarAlarmesGeraisZabbix = function() {
+        const modal = document.getElementById('modalZabbixGlobal');
+        const lista = document.getElementById('lista-alarmes-zabbix');
+        const contador = document.getElementById('contador-alarmes');
+        
+        if (modal) modal.style.display = 'flex';
+        
+        if (lista) {
+             if (alarmes.length > 0) {
+                lista.innerHTML = alarmes.map(a => `
+                    <div class="alarme-card" style="border-left: 5px solid #ef4444; background: rgba(30, 41, 59, 0.5); padding: 12px; margin-bottom: 8px; border-radius: 4px;">
+                        <h4 style="margin: 0; color: #f1f5f9; font-size: 13px;">${a.msg}</h4>
+                        <small style="color: #0ea5e9; font-weight: bold;"><i class="fas fa-plug"></i> ${a.host}</small>
+                    </div>
+                `).join('');
+                if(contador) contador.innerText = `${alarmes.length} Eventos`;
+            } else {
+                lista.innerHTML = '<div style="text-align:center; padding:20px; color:#22c55e;">✅ Tudo Normal</div>';
+                if(contador) contador.innerText = "0 Eventos";
+            }
+        }
+    };
+    window.fecharModalZabbix = () => { document.getElementById('modalZabbixGlobal').style.display = 'none'; };
+
+    // START
+    buscar();
+    setInterval(buscar, 30000);
+    setInterval(animar, 4000);
+})();
