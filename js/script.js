@@ -19,6 +19,7 @@ function initUI() {
        
     }, 150);
 }
+
 // Função específica para a nova tela de Documentação
 function atualizarTabelaDocumentacao() {
     const tabela = document.getElementById('tabelaDocCorpo');
@@ -1161,136 +1162,459 @@ inicializarPainelSeguro();
 // Executa novamente quando a página estiver 100% pronta
 window.addEventListener('load', inicializarPainelSeguro);
 // ==============================================================
+/// ==============================================================
 // ==============================================================
-// ⚡ MOTOR DO ZABBIX - VERSÃO FINAL (MAIÚSCULO + LOCAL)
+// ⚡ MOTOR ZABBIX – FINAL DEFINITIVO COM CARROSSEL (UPGRADE PULSO)
 // ==============================================================
-(function() {
-    console.log("🚀 Iniciando Motor Zabbix (Maiúsculo + Local)...");
-    
-    // CONFIGURAÇÕES
-    const URL = 'https://monitoramento.dinamicatelecom.com.br/api_jsonrpc.php';
-    const TOKEN = 'f895cfe5bb1033e0c30d515a612b78975599843e058b4185cfbb45ff243b67f2';
-    const GRUPOS = ["FONTE CPS", "Fonte Huawei", "FONTE HUAWEI", "FONTE SPS", "FONTE XPS", "Fonte ZTE"];
 
-    let alarmes = [];
-    let ponteiro = 0;
+window.alarmesZabbix = [];
+window.ponteiroZabbix = 0;
 
-    // 1. BUSCA DADOS
-    async function buscar() {
+(function () {
+
+    console.log("🚀 Motor Zabbix carregado (AC + Modal + Carrossel)");
+
+    /* ===== CONFIG ===== */
+    const URL = "https://monitoramento.dinamicatelecom.com.br/api_jsonrpc.php";
+    const TOKEN = "f895cfe5bb1033e0c30d515a612b78975599843e058b4185cfbb45ff243b67f2";
+
+    const GRUPOS = [
+        "FONTE CPS",
+        "Fonte Huawei",
+        "FONTE HUAWEI",
+        "FONTE SPS",
+        "FONTE XPS",
+        "Fonte ZTE"
+    ];
+
+    /* ==================================================
+       🔎 BUSCAR ALARMES ZABBIX
+    ================================================== */
+    async function buscarAlarmesZabbix() {
         try {
             const r1 = await fetch(URL, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ jsonrpc: "2.0", method: "hostgroup.get", params: { output: ["groupid"], filter: { name: GRUPOS } }, auth: TOKEN, id: 1 })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "hostgroup.get",
+                    params: {
+                        output: ["groupid"],
+                        filter: { name: GRUPOS }
+                    },
+                    auth: TOKEN,
+                    id: 1
+                })
             });
+
             const d1 = await r1.json();
-            const ids = d1.result?.map(g => g.groupid) || [];
+            const groupIds = d1.result?.map(g => g.groupid) || [];
 
-            if (ids.length > 0) {
-                const r2 = await fetch(URL, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        jsonrpc: "2.0", method: "trigger.get",
-                        params: { output: ["description", "priority"], selectHosts: ["name"], groupids: ids, filter: { value: 1 } }, auth: TOKEN, id: 1
-                    })
-                });
-                const d2 = await r2.json();
-                
-                // --- PROCESSAMENTO DOS DADOS ---
-                alarmes = (d2.result || []).map(a => ({
-                    // Transforma o nome do local em MAIÚSCULO
-                    host: a.hosts[0]?.name.toUpperCase(),
-                    
-                    // Limpa a mensagem e transforma em MAIÚSCULO
-                    msg: a.description
-                          .replace(/{HOST\.NAME}/g, '')
-                          .replace(/-{HOST\.CONN}/g, '')
-                          .replace(/{HOST\.CONN}/g, '')
-                          .trim()
-                          .toUpperCase(),
-                    priority: parseInt(a.priority)
-                }));
-                animar();
+            if (groupIds.length === 0) {
+                window.alarmesZabbix = [];
+                window.ponteiroZabbix = 0;
+                atualizarCardEnergiaAC();
+                atualizarCarrosselEnergia();
+                return;
             }
-        } catch (e) { console.warn("Zabbix Off", e); }
+
+            const r2 = await fetch(URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "trigger.get",
+                    params: {
+                        output: ["description", "priority"],
+                        selectHosts: ["name"],
+                        groupids: groupIds,
+                        filter: { value: 1 }
+                    },
+                    auth: TOKEN,
+                    id: 2
+                })
+            });
+
+            const d2 = await r2.json();
+
+            window.alarmesZabbix = (d2.result || []).map(a => ({
+                host: a.hosts?.[0]?.name?.toUpperCase() || "DESCONHECIDO",
+                msg: a.description
+                    .replace(/{HOST\.NAME}/g, "")
+                    .replace(/{HOST\.CONN}/g, "")
+                    .replace(/-{HOST\.CONN}/g, "")
+                    .trim()
+                    .toUpperCase(),
+                priority: Number(a.priority)
+            }));
+
+            window.ponteiroZabbix = 0;
+
+            console.log(`🚨 Alarmes ativos: ${window.alarmesZabbix.length}`);
+            window.dispatchEvent(new Event("zabbix:update"));
+
+
+            atualizarCardEnergiaAC();
+            atualizarCarrosselEnergia();
+
+        } catch (e) {
+            console.error("❌ Erro Zabbix", e);
+            window.alarmesZabbix = [];
+            window.ponteiroZabbix = 0;
+            atualizarCardEnergiaAC();
+            atualizarCarrosselEnergia();
+        }
     }
 
-    // 2. ANIMAÇÃO VISUAL
-    function animar() {
-        const card = document.getElementById("container-alarme-ret");
-        const texto = document.getElementById("texto-alarme-ret");
-        
-        if (!card || !texto) return;
+    /* ==================================================
+       ⚡ CARD ENERGIA AC (UPGRADE PULSO REAL)
+    ================================================== */
+    function atualizarCardEnergiaAC() {
+        const card = document.getElementById("card-energia-ac");
+        const valor = document.getElementById("valor-energia-ac");
 
-        card.style.display = 'flex';
-        card.style.flexDirection = 'column';
-        card.style.justifyContent = 'center';
+        if (!card || !valor) return;
 
-        if (alarmes.length === 0) {
-            // --- TUDO NORMAL ---
-            card.className = "stat-card-slim estado-normal"; 
-            card.style.border = "";
-            card.style.backgroundColor = "";
+        card.classList.remove("estado-normal", "estado-critico");
 
-            texto.innerHTML = `
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i class="fas fa-check-circle" style="font-size:1.4rem; color:#10b981;"></i>
-                    <div style="text-align:left;">
-                        <span style="display:block; font-size:9px; color:#cbd5e1; opacity:0.8;">REDE ELÉTRICA</span>
-                        <span style="font-size:13px; color:#10b981; font-weight:900; letter-spacing:0.5px;">OPERACIONAL</span>
-                    </div>
-                </div>
-            `;
+        // 🔥 remove overlay antigo
+        const oldOverlay = card.querySelector(".pulse-overlay");
+        if (oldOverlay) oldOverlay.remove();
+
+        if (window.alarmesZabbix.length === 0) {
+            card.classList.add("estado-normal");
+            valor.innerHTML =
+                "⚡ ENERGIA<br><span style='color:#22c55e;'>✅ NORMAL</span>";
         } else {
-            // --- MODO ALARME (CRÍTICO) ---
-            card.className = "stat-card-slim estado-critico";
+            card.classList.add("estado-critico");
+            valor.innerHTML =
+                "⚡ ENERGIA<br><span style='color:#ef4444;'>🚨 ALERTA</span>";
 
-            const item = alarmes[ponteiro % alarmes.length];
-            const icones = ["ℹ️", "⚡", "⚠️", "🔥", "🚨", "☠️"];
-            const icone = icones[item.priority] || "⚠️";
-
-            // AQUI JUNTA: LOCAL - MENSAGEM (TUDO MAIÚSCULO)
-            texto.innerHTML = `
-                <div style="display:flex; align-items:center; width:100%; gap: 10px;">
-                    <div style="font-size:1.6rem;">${icone}</div>
-                    <div style="text-align:left; overflow:hidden;">
-                        <div class="zbx-msg" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; font-size: 12px; line-height: 1.2;">
-                            <span style="color: #38bdf8; font-weight: 900;">${item.host}</span><br>
-                            <span style="color: #ffffff;">${item.msg}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            ponteiro++;
+            // ✅ adiciona overlay pulsante
+            const overlay = document.createElement("div");
+            overlay.className = "pulse-overlay";
+            card.style.position = "relative";
+            card.appendChild(overlay);
         }
     }
 
-    // 3. FUNÇÕES GLOBAIS (MODAL)
-    window.consultarAlarmesGeraisZabbix = function() {
-        const modal = document.getElementById('modalZabbixGlobal');
-        const lista = document.getElementById('lista-alarmes-zabbix');
-        const contador = document.getElementById('contador-alarmes');
-        
-        if (modal) modal.style.display = 'flex';
-        
-        if (lista) {
-             if (alarmes.length > 0) {
-                lista.innerHTML = alarmes.map(a => `
-                    <div class="alarme-card" style="border-left: 5px solid #ef4444; background: rgba(30, 41, 59, 0.5); padding: 12px; margin-bottom: 8px; border-radius: 4px;">
-                        <h4 style="margin: 0; color: #f1f5f9; font-size: 13px;">${a.msg}</h4>
-                        <small style="color: #0ea5e9; font-weight: bold;"><i class="fas fa-plug"></i> ${a.host}</small>
+    /* ==================================================
+       🔁 CARROSSEL DE ALARMES
+    ================================================== */
+    function atualizarCarrosselEnergia() {
+        const container = document.getElementById("container-alarme-ret");
+        const texto = document.getElementById("texto-alarme-ret");
+
+        if (!container || !texto) return;
+
+        if (window.alarmesZabbix.length === 0) {
+            container.style.display = "none";
+            container.classList.remove("estado-critico-pulse");
+            return;
+        }
+
+        container.style.display = "flex";
+        container.classList.add("estado-critico-pulse");
+
+        const item =
+            window.alarmesZabbix[
+                window.ponteiroZabbix % window.alarmesZabbix.length
+            ];
+
+        window.ponteiroZabbix++;
+
+        const icones = ["ℹ️", "⚡", "⚠️", "🔥", "🚨", "☠️"];
+        const icone = icones[item.priority] || "⚠️";
+
+        texto.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-size:1.6rem;">${icone}</div>
+                <div style="overflow:hidden;">
+                    <div style="
+                        white-space:nowrap;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                        max-width:240px;
+                        font-size:12px;
+                        line-height:1.2;
+                    ">
+                        <span style="color:#38bdf8; font-weight:900;">
+                            ${item.host}
+                        </span><br>
+                        <span style="color:#ffffff;">
+                            ${item.msg}
+                        </span>
                     </div>
-                `).join('');
-                if(contador) contador.innerText = `${alarmes.length} Eventos`;
-            } else {
-                lista.innerHTML = '<div style="text-align:center; padding:20px; color:#22c55e;">✅ Tudo Normal</div>';
-                if(contador) contador.innerText = "0 Eventos";
+                </div>
+            </div>
+        `;
+    }
+
+    /* ==================================================
+       📋 MODAL
+    ================================================== */
+    window.consultarAlarmesGeraisZabbix = function () {
+        const modal = document.getElementById("modalZabbixGlobal");
+        const lista = document.getElementById("lista-alarmes-zabbix");
+        const contador = document.getElementById("contador-alarmes");
+
+        if (modal) modal.style.display = "flex";
+        if (!lista) return;
+
+        if (window.alarmesZabbix.length === 0) {
+            lista.innerHTML =
+                `<div style="text-align:center;color:#22c55e;">✅ Tudo Normal</div>`;
+            if (contador) contador.innerText = "0 Eventos";
+            return;
+        }
+
+        lista.innerHTML = window.alarmesZabbix.map(a => `
+            <div class="alarme-card" style="
+                border-left:5px solid #ef4444;
+                background:rgba(30,41,59,0.6);
+                padding:12px;
+                margin-bottom:8px;
+                border-radius:6px;
+            ">
+                <strong style="color:#f8fafc;font-size:13px;">
+                    ${a.msg}
+                </strong><br>
+                <small style="color:#38bdf8;font-weight:bold;">
+                    ${a.host}
+                </small>
+            </div>
+        `).join("");
+
+        if (contador)
+            contador.innerText = `${window.alarmesZabbix.length} Eventos`;
+    };
+
+    window.fecharModalZabbix = function () {
+        const modal = document.getElementById("modalZabbixGlobal");
+        if (modal) modal.style.display = "none";
+    };
+/* ==================================================
+   💓 CSS DO PULSO – INJEÇÃO SEGURA (UMA VEZ)
+   Não altera nenhuma lógica existente
+================================================== */
+(function injetarCSSPulsoEnergia() {
+    if (document.getElementById("css-pulso-energia")) return;
+
+    const style = document.createElement("style");
+    style.id = "css-pulso-energia";
+    style.innerHTML = `
+        .pulse-overlay {
+            position: absolute;
+            inset: -2px;
+            border-radius: 12px;
+            pointer-events: none;
+            animation: pulseEnergia 1.6s ease-out infinite;
+            box-shadow: 0 0 0 rgba(239,68,68,0.6);
+        }
+
+        @keyframes pulseEnergia {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239,68,68,0.6);
+                opacity: 1;
+            }
+            70% {
+                box-shadow: 0 0 0 14px rgba(239,68,68,0);
+                opacity: 0.6;
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239,68,68,0);
+                opacity: 1;
             }
         }
-    };
-    window.fecharModalZabbix = () => { document.getElementById('modalZabbixGlobal').style.display = 'none'; };
+    `;
+    document.head.appendChild(style);
+})();
 
-    // START
-    buscar();
-    setInterval(buscar, 30000);
-    setInterval(animar, 4000);
+    /* ==================================================
+       ▶ START
+    ================================================== */
+    buscarAlarmesZabbix();
+    setInterval(buscarAlarmesZabbix, 30000);
+    setInterval(atualizarCarrosselEnergia, 4000);
+
+})();
+/// ==============================================================
+/// ⚡ MOTOR ZABBIX + MAPA OPERACIONAL REAL (VERSÃO NOC)
+/// ==============================================================
+
+/* ==================================================
+   🌍 BASE DE DADOS DE POPs (EXISTENTE)
+   - Usa exactCoords (já definido no projeto)
+================================================== */
+
+const basePOPs = Object.entries(exactCoords).map(([nome, coord]) => {
+    const uf = nome.split("-")[0];
+    return {
+        nomeOriginal: nome,
+        nomeKey: nome.toUpperCase(),
+        uf,
+        lat: coord[0],
+        lng: coord[1]
+    };
+});
+
+/* ==================================================
+   🔗 CORRELAÇÃO ZABBIX × POP REAL
+================================================== */
+
+function correlacionarAlarmesComPOPs() {
+    const mapa = {};
+
+    basePOPs.forEach(pop => {
+        mapa[pop.nomeKey] = {
+            ...pop,
+            alarmes: [],
+            maxPriority: 0
+        };
+    });
+
+    window.alarmesZabbix.forEach(al => {
+        const host = al.host?.toUpperCase();
+        if (!host) return;
+
+        const pop = basePOPs.find(p => host.includes(p.nomeKey.split(" ")[0]));
+        if (!pop) return;
+
+        const ref = mapa[pop.nomeKey];
+        ref.alarmes.push(al);
+        ref.maxPriority = Math.max(ref.maxPriority, al.priority || 0);
+    });
+
+    return mapa;
+}
+
+/* ==================================================
+   🧭 AGREGAÇÃO POR UF (ESTADO REAL)
+================================================== */
+
+function calcularEstadoPorUF() {
+    const pops = correlacionarAlarmesComPOPs();
+    const ufs = {};
+
+    Object.values(pops).forEach(pop => {
+
+        if (!ufs[pop.uf]) {
+            ufs[pop.uf] = {
+                totalPOPs: 0,
+                popsComAlarme: 0,
+                maxPriority: 0
+            };
+        }
+
+        ufs[pop.uf].totalPOPs++;
+
+        if (pop.alarmes.length > 0) {
+            ufs[pop.uf].popsComAlarme++;
+            ufs[pop.uf].maxPriority = Math.max(
+                ufs[pop.uf].maxPriority,
+                pop.maxPriority
+            );
+        }
+    });
+
+    return ufs;
+}
+
+/* ==================================================
+   🗺️ RENDER MAPA OPERACIONAL (CARD)
+================================================== */
+
+function renderMapaOperacional() {
+    const container = document.getElementById("container-grafico-vdc");
+    if (!container) return;
+
+    const ufs = calcularEstadoPorUF();
+
+    container.innerHTML = `
+        <div class="mapa-grid">
+            ${Object.entries(ufs).map(([uf, d]) => {
+
+                let estado = "normal";
+                if (d.maxPriority >= 4) estado = "critico";
+                else if (d.popsComAlarme > 0) estado = "atencao";
+
+                return `
+                    <div class="uf-card ${estado}">
+                        <strong>${uf}</strong>
+                        <small>${d.popsComAlarme}/${d.totalPOPs}</small>
+                    </div>
+                `;
+            }).join("")}
+        </div>
+    `;
+}
+
+
+/* ==================================================
+   🧭 MAPA OPERACIONAL – REATIVO AO ZABBIX (FINAL)
+================================================== */
+
+(function () {
+
+    function construirMapaOperacional() {
+        const container = document.getElementById("container-grafico-vdc");
+        if (!container) return;
+
+        if (!window.alarmesZabbix || !window.exactCoords) {
+            console.warn("⚠️ Dados insuficientes para mapa");
+            return;
+        }
+
+        const pops = Object.entries(exactCoords).map(([nome, coord]) => {
+            const uf = nome.split("-")[0];
+            return {
+                nomeKey: nome.toUpperCase(),
+                uf,
+                alarmes: []
+            };
+        });
+
+        // 🔗 correlaciona alarmes reais
+        window.alarmesZabbix.forEach(al => {
+            const host = al.host?.toUpperCase() || "";
+            const pop = pops.find(p => host.includes(p.nomeKey.split(" ")[0]));
+            if (pop) pop.alarmes.push(al);
+        });
+
+        // 📊 agrega por UF
+        const porUF = {};
+        pops.forEach(p => {
+            if (!porUF[p.uf]) {
+                porUF[p.uf] = { total: 0, alarmados: 0, critico: false };
+            }
+
+            porUF[p.uf].total++;
+
+            if (p.alarmes.length > 0) {
+                porUF[p.uf].alarmados++;
+                if (p.alarmes.some(a => a.priority >= 4)) {
+                    porUF[p.uf].critico = true;
+                }
+            }
+        });
+
+        // 🗺️ render
+        container.innerHTML = `
+            <div class="mapa-grid">
+                ${Object.entries(porUF).map(([uf, d]) => `
+                    <div class="uf-card ${
+                        d.critico ? "critico" :
+                        d.alarmados ? "atencao" : "normal"
+                    }">
+                        <strong>${uf}</strong>
+                        <small>${d.alarmados}/${d.total}</small>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    // 🔔 escuta o evento REAL do motor
+    window.addEventListener("zabbix:update", construirMapaOperacional);
+
 })();

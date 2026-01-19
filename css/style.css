@@ -476,3 +476,283 @@ td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
     100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
+/* ============================================================== */
+/* 🚑 CORREÇÃO FINAL DA BARRA FANTASMA (COLE NO FIM DO CSS)       */
+/* ============================================================== */
+
+/* 1. Estilo do Card quando está em ALARME (Vermelho) */
+.stat-card-slim.estado-critico {
+    background: rgba(69, 10, 10, 0.95) !important; /* Fundo vermelho escuro */
+    border: 2px solid #ef4444 !important;          /* Borda vermelha neon */
+    padding: 0 15px !important;                    /* Remove padding vertical extra */
+    height: 75px !important;                       /* Trava a altura igual aos outros */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;            /* Centraliza tudo */
+    animation: pulsar-critico 1s infinite alternate;
+}
+
+/* 2. O SEGREDO: Se sobrar algum título ou ícone antigo, isso FORÇA sumir */
+.stat-card-slim.estado-critico .stat-label,
+.stat-card-slim.estado-critico .stat-icon-glow {
+    display: none !important;
+}
+
+/* 3. Animação de Pulsar */
+@keyframes pulsar-critico {
+    0% { box-shadow: 0 0 5px #ef4444; }
+    100% { box-shadow: 0 0 20px #ef4444; }
+}
+/* --- FORÇA BRUTA: CARD DE ENERGIA --- */
+
+/* 1. Mata o fundo azul padrão APENAS neste card */
+#container-alarme-ret {
+    background-color: transparent !important; /* Remove o azul */
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* 2. Define a cor quando estiver NORMAL (Verde) */
+#container-alarme-ret.estado-normal {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid #10b981 !important;
+}
+
+/* 3. Define a cor quando estiver CRÍTICO (Vermelho) */
+#container-alarme-ret.estado-critico {
+    background-color: rgba(69, 10, 10, 0.95) !important;
+    border: 2px solid #ef4444 !important;
+    animation: pulsar 1s infinite alternate;
+}
+
+/* 4. Remove padding extra que cria barras vazias */
+#container-alarme-ret {
+    padding: 0 15px !important;
+    display: flex !important;
+    align-items: center !important; 
+    justify-content: center !important;
+}
+/* =============================== */
+/* 🚫 REMOÇÃO TOTAL DA BARRA AZUL  */
+/* =============================== */
+
+
+/* Garante que nada desenhe algo acima */
+html, body {
+    overflow-x: hidden !important;
+}
+
+/* Containers principais */
+.main,
+.content,
+.page,
+.card-resumo,
+.card-custom,
+.chart-box-container,
+.stat-card-slim {
+    box-shadow: none !important;
+    border-top: none !important;
+    background-image: none !important;
+}
+
+/* Caso venha de algum header invisível */
+header,
+.navbar,
+.topbar {
+    display: none !important;
+    height: 0 !important;
+}
+
+/* Remove qualquer coisa colada no topo da tela */
+body > * {
+    box-shadow: none !important;
+}
+.stat-card-slim.estado-critico {
+    background: rgba(69, 10, 10, 0.95) !important;
+    border: 2px solid #ef4444 !important;
+    animation: pulsar-critico 1s infinite alternate;
+}
+
+.stat-card-slim.estado-normal {
+    border: 1px solid #10b981;
+}
+
+.stat-card-slim.estado-critico .stat-value {
+    color: #ef4444;
+    font-weight: bold;
+}
+.estado-normal {
+    border: 1px solid #10b981;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.estado-critico {
+    border: 2px solid #ef4444;
+    background: rgba(69, 10, 10, 0.95);
+    animation: pulsar-critico 1.2s infinite alternate;
+}
+
+@keyframes pulsar-critico {
+    from { box-shadow: 0 0 5px #ef4444; }
+    to   { box-shadow: 0 0 20px #ef4444; }
+}
+/* 🔴 ALERTA ENERGIA – FUNDO PULSANTE */
+.estado-critico-pulse {
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    animation: pulseEnergia 1.6s infinite;
+}
+
+@keyframes pulseEnergia {
+    0% {
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(239, 68, 68, 0.9);
+    }
+    100% {
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+    }
+}
+/* ================================================== */
+/* 🔴 PULSO SUAVE APENAS NA BORDA – CARROSSEL ENERGIA */
+/* ================================================== */
+
+#container-alarme-ret.estado-critico-pulse {
+    background: rgba(69, 10, 10, 0.25) !important; /* Fundo vermelho BEM leve */
+    border: 2px solid #ef4444 !important;
+    box-shadow: none !important;
+    animation: pulseBordaSuave 1.2s infinite ease-in-out !important;
+}
+
+/* 🎯 Animação SUAVE – só na borda */
+@keyframes pulseBordaSuave {
+    0% {
+        border-color: rgba(239, 68, 68, 0.4);
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+    }
+    50% {
+        border-color: rgba(239, 68, 68, 1);
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+    }
+    100% {
+        border-color: rgba(239, 68, 68, 0.4);
+        box-shadow: 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+@keyframes pulse-overlay {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.15;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.pulse-overlay {
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 2;
+
+    background: transparent;
+    border: 2px solid rgba(239, 68, 68, 0.6);
+
+    animation: pulse-overlay 1.6s ease-in-out infinite;
+}
+#card-energia-ac {
+    position: relative;
+    overflow: visible !important;
+}
+/* ============================= */
+/* 🧭 MAPA OPERACIONAL – NOC */
+/* ============================= */
+
+.mapa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
+    gap: 10px;
+    padding: 8px;
+}
+
+/* Card UF */
+.uf-card {
+    background: #020617;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 900;
+    padding: 10px 4px;
+    font-size: 14px;
+    color: #e5e7eb;
+    border: 1px solid #1e293b;
+    position: relative;
+}
+
+.uf-card small {
+    display: block;
+    font-size: 12px;
+    margin-top: 2px;
+    color: #cbd5f5;
+}
+
+/* Estados */
+.uf-card.normal {
+    background: #16a34a;
+}
+
+.uf-card.atencao {
+    background: #eab308;
+    color: #020617;
+    animation: pulseSlow 3s infinite;
+}
+
+.uf-card.critico {
+    background: #dc2626;
+    animation: pulseFast 1.5s infinite;
+}
+
+/* Pulsos */
+@keyframes pulseFast {
+    0% { box-shadow: 0 0 0 rgba(220,38,38,0); }
+    50% { box-shadow: 0 0 14px rgba(220,38,38,.8); }
+    100% { box-shadow: 0 0 0 rgba(220,38,38,0); }
+}
+
+@keyframes pulseSlow {
+    0% { opacity: .75 }
+    50% { opacity: 1 }
+    100% { opacity: .75 }
+}
+.mapa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+}
+
+.uf-card {
+    background: #020617;
+    border: 2px solid #1e293b;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.uf-card small {
+    display: block;
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.uf-card.normal { border-color: #22c55e; }
+.uf-card.atencao { border-color: #eab308; }
+.uf-card.critico {
+    border-color: #ef4444;
+    animation: pulseBordaSuave 1.4s infinite;
+}

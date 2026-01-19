@@ -129,13 +129,15 @@
     </div>
 
     <div class="col-md-4">
-        <div class="stat-card-slim">
+       <div class="stat-card-slim" id="card-energia-ac">
+
             <div class="stat-icon-glow icon-yellow">
                 <i class="fas fa-bolt"></i>
             </div>
             <div class="stat-info">
                 <span class="stat-label label-yellow">ENERGIA AC</span>
-                <span class="stat-value">NORMAL</span>
+          <span class="stat-value" id="valor-energia-ac">NORMAL</span>
+
             </div>
         </div>
     </div>
@@ -193,13 +195,22 @@
             </div>
 
             <div class="col-md-4">
-                <div class="chart-box-container text-center" style="height: 320px; display: flex; flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
-                    <div class="text-title-yellow" style="margin-bottom: 5px;">Retificadoras</div>
-                    <div id="container-grafico-vdc" style="flex: 1; position: relative; width: 100%; min-height: 200px;">
-                        <canvas id="graficoVdc"></canvas>
-                    </div>
-                </div>
-            </div>
+    <div class="chart-box-container text-center"
+         style="height: 320px; display: flex; flex-direction: column; background: #0f172a; padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
+
+        <div class="text-title-yellow" style="margin-bottom: 5px;">
+            🧭 MAPA OPERACIONAL
+        </div>
+
+        <div id="container-grafico-vdc"
+             style="flex: 1; position: relative; width: 100%; min-height: 200px;">
+
+            <!-- MAPA OPERACIONAL -->
+            <div id="mapa-operacional" class="mapa-grid"></div>
+
+        </div>
+    </div>
+</div>
 
             <div class="col-md-4">
                 <div class="chart-box-container text-center">
@@ -389,16 +400,17 @@
 </style>
 <div id="carrossel-zabbix" class="carrossel-zabbix"></div>
 
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/database.js"></script>
+<script src="js/equipamentos_dados.js"></script>
+<script src="js/dwdm.js"></script>
 
-   <script src="js/data.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/maps.js"></script> 
-    <script src="js/charts.js"></script>
-    <script src="js/database.js"></script>
+<!-- MOTOR ZABBIX -->
+<script src="js/script.js"></script>
 
-    <script src="js/equipamentos_dados.js"></script> 
-    <script src="js/dwdm.js"></script> <script src="js/script.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    
+<!-- MAPA OPERACIONAL (DEPOIS DO MOTOR) -->
+<script src="js/mapa-operacional.js"></script>
