@@ -702,7 +702,7 @@ body > * {
 
 /* Estados */
 .uf-card.normal {
-    background: #16a34a;
+    background: #01451c;
 }
 
 .uf-card.atencao {
@@ -750,9 +750,212 @@ body > * {
     opacity: 0.8;
 }
 
-.uf-card.normal { border-color: #22c55e; }
+.uf-card.normal { border-color: #0adb57; }
 .uf-card.atencao { border-color: #eab308; }
 .uf-card.critico {
     border-color: #ef4444;
     animation: pulseBordaSuave 1.4s infinite;
+}
+
+#secao-alarmes-zabbix {
+    display: none;
+}
+
+/* só mostra quando houver alarme */
+#secao-alarmes-zabbix.ativo {
+    display: block;
+}
+
+/* remove altura forçada do container interno */
+#container-alarme-net {
+    min-height: unset !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: block !important;
+}
+/* ESTILO DOS BOTÕES DE ESTADO */
+.btn-estado {
+    background: #253a5d; /* Cor padrão (cinza escuro) */
+    border: 1px solid #334155;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    min-width: 70px;
+    text-align: center;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.btn-estado:hover { transform: translateY(-2px); filter: brightness(1.2); }
+.uf-label { font-weight: bold; font-size: 14px; }
+.uf-count { font-size: 11px; opacity: 0.8; }
+
+/* Cores Dinâmicas (Adicionadas via JS) */
+.estado-ok { background: #10b981 !important; border-color: #059669 !important; } /* Verde */
+.estado-erro { background: #ef4444 !important; border-color: #dc2626 !important; animation: pulsar 2s infinite; } /* Vermelho */
+
+/* MODAL CENTRAL */
+.modal-zabbix {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
+}
+.modal-zabbix-content {
+    background: #0f172a; border: 1px solid #334155; border-radius: 10px;
+    width: 90%; max-width: 600px; max-height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+}
+.modal-zabbix-header { padding: 15px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; background: #1e293b; border-radius: 10px 10px 0 0; }
+.modal-zabbix-body { padding: 20px; overflow-y: auto; flex: 1; }
+.modal-zabbix-footer { padding: 10px 20px; background: #1e293b; border-top: 1px solid #334155; border-radius: 0 0 10px 10px; display: flex; justify-content: space-between; align-items: center; }
+/* ============================================================== */
+/* 💎 UPGRADE VISUAL: MAPA E MODAL (ESTILO NOC)                   */
+/* ============================================================== */
+
+/* --- 1. MELHORIA NO GRID DO MAPA --- */
+.mapa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Auto-ajuste */
+    gap: 15px;
+    padding: 20px;
+    justify-content: center;
+}
+
+/* O Cartão do Estado (BA, ES, RJ, SP) */
+.uf-card {
+    background: rgba(15, 23, 42, 0.8); /* Fundo escuro vidro */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    min-height: 80px;
+}
+
+/* Efeito ao passar o mouse */
+.uf-card:hover {
+    transform: translateY(-5px); /* Sobe um pouquinho */
+    background: rgba(30, 41, 59, 0.9);
+}
+
+/* Estado NORMAL (Verde) */
+.uf-card.normal {
+    border-bottom: 4px solid #30e4c9;
+}
+.uf-card.normal strong { color: #fefefe; }
+
+/* Estado ATENÇÃO (Amarelo - se tiver alarme leve) */
+.uf-card.atencao {
+    border-bottom: 4px solid #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+.uf-card.atencao strong { color: #f59e0b; }
+
+/* Estado CRÍTICO (Vermelho Piscante) */
+.uf-card.critico {
+    background: rgba(109, 1, 1, 0.6);
+    border: 1px solid #ef4444;
+    box-shadow: 0 0 15px rgba(126, 78, 78, 0.4);
+    animation: pulsar-card 1.5s infinite alternate;
+}
+.uf-card.critico strong { color: #fff; font-size: 1.2rem; }
+.uf-card.critico small { color: #fca5a5; font-weight: bold; }
+
+@keyframes pulsar-card {
+    0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+    100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); border-color: #f87171; }
+}
+
+/* Tipografia dentro do card */
+.uf-card strong {
+    font-size: 1.1rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 5px;
+}
+.uf-card small {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-family: monospace;
+}
+
+/* --- 2. MELHORIA NO MODAL DE ALARMES --- */
+
+/* Fundo do Modal (Mais "Blur") */
+.modal-zabbix {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px); /* Desfoque no fundo */
+}
+
+/* A Lista de Itens */
+#lista-alarmes-zabbix {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px; /* Espaço para rolagem */
+}
+
+/* Scrollbar Personalizada (Fina e Escura) */
+.modal-zabbix-body::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-zabbix-body::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+.modal-zabbix-body::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+.modal-zabbix-body::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* O Card de cada Alarme dentro da lista */
+.alarme-card-item {
+    background: linear-gradient(90deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.9) 100%);
+    border: 1px solid #334155;
+    border-left: 4px solid #b05353; /* Vermelho padrão */
+    padding: 15px;
+    border-radius: 6px;
+    transition: 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.alarme-card-item:hover {
+    background: #1e293b;
+    transform: translateX(5px); /* Efeito de slide ao passar o mouse */
+}
+
+/* Ícones e Textos no Modal */
+.alarme-host {
+    font-size: 11px;
+    font-weight: bold;
+    color: #38bdf8; /* Azul Cyan */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.alarme-msg {
+    color: #e2e8f0;
+    font-size: 13px;
+    line-height: 1.4;
 }

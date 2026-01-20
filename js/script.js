@@ -1440,15 +1440,16 @@ window.ponteiroZabbix = 0;
 })();
 /// ==============================================================
 /// ⚡ MOTOR ZABBIX + MAPA OPERACIONAL REAL (VERSÃO NOC)
-/// ==============================================================
+// ==============================================================
+
+const UFS_PERMITIDAS = ["BA", "ES", "RJ", "SP"];
 
 /* ==================================================
    🌍 BASE DE DADOS DE POPs (EXISTENTE)
-   - Usa exactCoords (já definido no projeto)
 ================================================== */
-
 const basePOPs = Object.entries(exactCoords).map(([nome, coord]) => {
     const uf = nome.split("-")[0];
+
     return {
         nomeOriginal: nome,
         nomeKey: nome.toUpperCase(),
@@ -1461,11 +1462,13 @@ const basePOPs = Object.entries(exactCoords).map(([nome, coord]) => {
 /* ==================================================
    🔗 CORRELAÇÃO ZABBIX × POP REAL
 ================================================== */
-
 function correlacionarAlarmesComPOPs() {
     const mapa = {};
 
     basePOPs.forEach(pop => {
+        // ❌ ignora UFs não permitidas
+        if (!UFS_PERMITIDAS.includes(pop.uf)) return;
+
         mapa[pop.nomeKey] = {
             ...pop,
             alarmes: [],
@@ -1477,10 +1480,16 @@ function correlacionarAlarmesComPOPs() {
         const host = al.host?.toUpperCase();
         if (!host) return;
 
-        const pop = basePOPs.find(p => host.includes(p.nomeKey.split(" ")[0]));
+        const pop = basePOPs.find(p =>
+            UFS_PERMITIDAS.includes(p.uf) &&
+            host.includes(p.nomeKey.split(" ")[0])
+        );
+
         if (!pop) return;
 
         const ref = mapa[pop.nomeKey];
+        if (!ref) return;
+
         ref.alarmes.push(al);
         ref.maxPriority = Math.max(ref.maxPriority, al.priority || 0);
     });
@@ -1491,7 +1500,6 @@ function correlacionarAlarmesComPOPs() {
 /* ==================================================
    🧭 AGREGAÇÃO POR UF (ESTADO REAL)
 ================================================== */
-
 function calcularEstadoPorUF() {
     const pops = correlacionarAlarmesComPOPs();
     const ufs = {};
@@ -1523,7 +1531,6 @@ function calcularEstadoPorUF() {
 /* ==================================================
    🗺️ RENDER MAPA OPERACIONAL (CARD)
 ================================================== */
-
 function renderMapaOperacional() {
     const container = document.getElementById("container-grafico-vdc");
     if (!container) return;
@@ -1549,11 +1556,9 @@ function renderMapaOperacional() {
     `;
 }
 
-
 /* ==================================================
    🧭 MAPA OPERACIONAL – REATIVO AO ZABBIX (FINAL)
 ================================================== */
-
 (function () {
 
     function construirMapaOperacional() {
@@ -1565,19 +1570,25 @@ function renderMapaOperacional() {
             return;
         }
 
-        const pops = Object.entries(exactCoords).map(([nome, coord]) => {
-            const uf = nome.split("-")[0];
-            return {
-                nomeKey: nome.toUpperCase(),
-                uf,
-                alarmes: []
-            };
-        });
+        const pops = Object.entries(exactCoords)
+            .map(([nome, coord]) => {
+                const uf = nome.split("-")[0];
+                if (!UFS_PERMITIDAS.includes(uf)) return null;
+
+                return {
+                    nomeKey: nome.toUpperCase(),
+                    uf,
+                    alarmes: []
+                };
+            })
+            .filter(Boolean);
 
         // 🔗 correlaciona alarmes reais
         window.alarmesZabbix.forEach(al => {
             const host = al.host?.toUpperCase() || "";
-            const pop = pops.find(p => host.includes(p.nomeKey.split(" ")[0]));
+            const pop = pops.find(p =>
+                host.includes(p.nomeKey.split(" ")[0])
+            );
             if (pop) pop.alarmes.push(al);
         });
 
@@ -1616,5 +1627,133 @@ function renderMapaOperacional() {
 
     // 🔔 escuta o evento REAL do motor
     window.addEventListener("zabbix:update", construirMapaOperacional);
+
+})();
+// ==============================================================
+// 🖱️ INTERATIVIDADE: CLIQUE NOS QUADRADOS DO MAPA (BA, ES, RJ, SP)
+// ==============================================================
+(function() {
+    console.log("🖱️ Iniciando ouvinte de cliques do Mapa Operacional (Versão Pro)...");
+
+    // 1. FUNÇÃO QUE ABRE O MODAL (GLOBAL)
+    window.abrirAlarmesUF = function(uf) {
+        console.log(`🔎 Abrindo alarmes para: ${uf}`);
+
+        const modal = document.getElementById('modalZabbixGlobal');
+        const lista = document.getElementById('lista-alarmes-zabbix');
+        const titulo = document.getElementById('titulo-estado-modal');
+        const contador = document.getElementById('contador-alarmes'); 
+
+        if (!modal) {
+            console.error("❌ Modal 'modalZabbixGlobal' não encontrado no HTML!");
+            return;
+        }
+
+        // Usa os dados que já estão na memória do Motor Zabbix
+        const todosAlarmes = window.alarmesZabbix || [];
+        
+        // Filtra: O host deve conter "UF-" (Ex: BA-SSA...)
+        const alarmesDoEstado = todosAlarmes.filter(a => a.host.includes(`${uf}-`));
+
+        // Atualiza Título com cor de destaque
+        if (titulo) titulo.innerHTML = `ESTADO: <span style="color:#ffcc00; text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);">${uf}</span>`;
+
+        // Mostra o Modal
+        modal.style.display = 'flex';
+
+        // Preenche a lista
+        if (!lista) return;
+
+        if (alarmesDoEstado.length === 0) {
+            // --- ESTADO TUDO NORMAL ---
+            lista.innerHTML = `
+                <div style="text-align:center; padding:50px 20px;">
+                    <div style="margin-bottom:20px; animation: flutuar 3s infinite ease-in-out;">
+                        <i class="fas fa-check-circle" style="font-size:4rem; color:#10b981; filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4));"></i>
+                    </div>
+                    <h3 style="color:white; margin:0; font-weight:bold;">Operacional em ${uf}</h3>
+                    <p style="color:#94a3b8; margin-top:5px; font-size:0.9rem;">Nenhum incidente ativo reportado.</p>
+                </div>`;
+            if(contador) contador.innerText = "0 Eventos";
+        } else {
+            // --- LISTA DE ALARMES (LAYOUT NOVO) ---
+            lista.innerHTML = alarmesDoEstado.map(a => `
+                <div class="alarme-card-item" style="
+                    background: linear-gradient(90deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.95) 100%);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-left: 4px solid #ef4444;
+                    padding: 15px;
+                    margin-bottom: 8px;
+                    border-radius: 6px;
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center;
+                    transition: transform 0.2s;
+                " onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'">
+                    
+                    <div style="overflow: hidden; padding-right: 15px;">
+                        <div style="
+                            color:#38bdf8; 
+                            font-weight:800; 
+                            font-size:11px; 
+                            margin-bottom:4px; 
+                            text-transform:uppercase; 
+                            letter-spacing:0.5px; 
+                            display:flex; 
+                            align-items:center; 
+                            gap:6px;
+                        ">
+                            <i class="fas fa-server"></i> ${a.host}
+                        </div>
+                        <div style="
+                            color:#e2e8f0; 
+                            font-size:13px; 
+                            line-height:1.4; 
+                            font-weight:500;
+                        ">
+                            ${a.msg}
+                        </div>
+                    </div>
+
+                    <div style="text-align:right; min-width: 30px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:1.2rem; filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.5));"></i>
+                    </div>
+                </div>
+            `).join('');
+            
+            if(contador) contador.innerText = `${alarmesDoEstado.length} Eventos`;
+        }
+    };
+
+    // 2. OUVINTE DE CLIQUE (VIGIA A ÁREA DO MAPA)
+    const containerMapa = document.getElementById("container-grafico-vdc");
+
+    if (containerMapa) {
+        // Tática do Clone: Remove ouvintes antigos para evitar cliques duplicados
+        const novoContainer = containerMapa.cloneNode(true);
+        containerMapa.parentNode.replaceChild(novoContainer, containerMapa);
+
+        // Adiciona o ouvinte novo
+        novoContainer.addEventListener("click", function(e) {
+            // Procura se o clique foi dentro de um card de estado (.uf-card)
+            const card = e.target.closest(".uf-card");
+            
+            if (card) {
+                // Efeito visual de clique
+                card.style.transform = "scale(0.95)";
+                setTimeout(() => card.style.transform = "", 150);
+
+                // Pega o texto da tag <strong> (BA, ES, RJ, SP)
+                const ufElement = card.querySelector("strong");
+                if (ufElement) {
+                    const uf = ufElement.innerText.trim();
+                    abrirAlarmesUF(uf);
+                }
+            }
+        });
+        console.log("✅ Interatividade do Mapa Operacional ativada!");
+    } else {
+        console.warn("⚠️ Container do mapa (container-grafico-vdc) não encontrado.");
+    }
 
 })();

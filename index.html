@@ -15,6 +15,26 @@
     
     <link rel="stylesheet" href="css/style.css">
 </head>
+<div id="modalZabbixGlobal" class="modal-zabbix" style="display: none;">
+    <div class="modal-zabbix-content">
+        
+        <div class="modal-zabbix-header">
+            <h3 style="margin:0; color:white; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-map-marker-alt" style="color:#00d2ff;"></i> 
+                ALARMES: <span id="titulo-estado-modal" style="color:#ffcc00;">CARREGANDO...</span>
+            </h3>
+            
+        </div>
+
+        <div class="modal-zabbix-body" id="lista-alarmes-zabbix">
+            </div>
+
+        <div class="modal-zabbix-footer">
+            <small id="contador-alarmes-modal" style="color:#94a3b8;">Aguardando dados...</small>
+            <button onclick="fecharModalZabbix()" class="btn btn-sm btn-secondary">Fechar</button>
+        </div>
+    </div>
+</div>
 <body>
 
     <div class="public-area" id="login-screen">
@@ -58,30 +78,7 @@
             </div>
 
             <div class="content">
-                <div id="modalZabbixGlobal" class="modal-zabbix">
-    <div class="modal-zabbix-content">
-        <div class="modal-zabbix-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="pulsar-alarme"></div>
-                <h3 style="margin:0; color:white; font-size:16px;">CENTRAL DE ALARMES ZABBIX</h3>
-            </div>
-            <button class="fechar-zabbix" onclick="fecharModalZabbix()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div id="lista-alarmes-zabbix" class="modal-zabbix-body">
-            <div style="text-align:center; padding: 40px;">
-                <p style="color:#94a3b8;">Sincronizando com 172.20.0.82...</p>
-            </div>
-        </div>
-
-        <div class="modal-zabbix-footer">
-            <span><i class="fas fa-network-wired"></i> Status: Conectado</span>
-            <span id="contador-alarmes" class="badge-contagem">0 Eventos</span>
-        </div>
-    </div>
-</div>
+           
                 <div id="dwdmPage" class="page-content" style="display: none;">
     <div class="container-fluid">
         <h2 class="text-white mb-4">📟 Gerência DWDM Modular</h2>
@@ -112,7 +109,7 @@
                 
                 <div id="home" class="page active">
   <h1 class="h4 mb-4 d-flex align-items-center gap-3" style="color: #00d2ff; font-weight: 800;">
-    <img src="img/logo.png" class="logo-titulo-neon" alt="">
+  
     VISÃO GERAL
 </h1>
 <div class="row g-3 mb-4">
@@ -206,6 +203,29 @@
              style="flex: 1; position: relative; width: 100%; min-height: 200px;">
 
             <!-- MAPA OPERACIONAL -->
+             <div class="botoes-estados-container" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; z-index: 10; position: relative;">
+    
+    <div class="btn-estado" onclick="abrirAlarmesEstado('BA')" id="btn-ba">
+        <span class="uf-label">BA</span>
+        <span class="uf-count" id="count-ba">--</span>
+    </div>
+
+    <div class="btn-estado" onclick="abrirAlarmesEstado('ES')" id="btn-es">
+        <span class="uf-label">ES</span>
+        <span class="uf-count" id="count-es">--</span>
+    </div>
+
+    <div class="btn-estado" onclick="abrirAlarmesEstado('RJ')" id="btn-rj">
+        <span class="uf-label">RJ</span>
+        <span class="uf-count" id="count-rj">--</span>
+    </div>
+
+    <div class="btn-estado" onclick="abrirAlarmesEstado('SP')" id="btn-sp">
+        <span class="uf-label">SP</span>
+        <span class="uf-count" id="count-sp">--</span>
+    </div>
+
+</div>
             <div id="mapa-operacional" class="mapa-grid"></div>
 
         </div>

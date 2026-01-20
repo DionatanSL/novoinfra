@@ -243,52 +243,128 @@ function carregarTabelaBaterias() {
     }).join('');
 }
 
-// Inicia a conexão
-conectarPlanilha();
-const LINK_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5xzAJogS7jNeLGdX34WZ6YMSjvAusiqbSXaXXYbYez_uwhXcrsCizWFM3Yt2w1Xr4lEsHjwxDRLH-/pub?output=csv";
-const URL_POPS_CSV = LINK_BASE + "&cache_buster=" + new Date().getTime();
+// ==============================================================
+// 📊 DATABASE - POPS (Google Sheets CSV)
+// ==============================================================
 
+// Inicia conexão (mantido)
+if (typeof conectarPlanilha === 'function') {
+    conectarPlanilha();
+}
+
+// 🔗 Link base da planilha
+const LINK_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5xzAJogS7jNeLGdX34WZ6YMSjvAusiqbSXaXXYbYez_uwhXcrsCizWFM3Yt2w1Xr4lEsHjwxDRLH-/pub?output=csv";
+
+// 🌐 Variáveis globais (mantidas)
 window.popsList = [];
 window.detalhesPops = {};
 
+// 🧠 Cache
+const CACHE_KEY_POPS = "pops_csv_cache_v2";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+// ==============================================================
+// 🔄 SINCRONIZAÇÃO PRINCIPAL
+// ==============================================================
 async function sincronizarPopsFinal() {
     try {
-        const response = await fetch(URL_POPS_CSV);
-        const csvText = await response.text();
-        const linhas = csvText.split(/\r?\n/).filter(l => l.trim() !== "");
+        let csvText = null;
 
-        if (linhas.length < 2) return;
-
-        const sep = linhas[0].includes(';') ? ';' : ',';
-        
-        window.popsList = [];
-        window.detalhesPops = {};
-
-        linhas.slice(1).forEach((linha) => {
-            const col = linha.split(sep).map(v => v.replace(/^"|"$/g, '').trim());
-            const nomePop = col[1]; // Coluna B
-
-            if (nomePop) {
-                window.popsList.push(nomePop);
-                window.detalhesPops[nomePop] = {
-                    pop: col[1] || "---",      // B
-                    instalacao: col[2] || "---", // C
-                    contatos: col[3] || "---",   // D
-                    forma: col[4] || "---",      // E
-                    titular: col[5] || "---",    // F
-                    cpf: col[6] || "---",        // G
-                    endereco: col[7] || "---",   // H
-                    monitoramento: col[8] || "---" // I
-                };
+        // 1️⃣ Tenta cache
+        const cacheRaw = localStorage.getItem(CACHE_KEY_POPS);
+        if (cacheRaw) {
+            const cache = JSON.parse(cacheRaw);
+            if (Date.now() - cache.timestamp < CACHE_TTL) {
+                csvText = cache.data;
+                console.log("⚡ POPs carregados do cache");
             }
-        });
+        }
 
-        console.log("✅ Dados sincronizados.");
-        if (typeof carregarPops === 'function') carregarPops();
-        if (typeof carregarMinimap === 'function') carregarMinimap();
-        
+        // 2️⃣ Se não tiver cache, busca online
+        if (!csvText) {
+            console.log("🌐 Buscando POPs da planilha...");
+            const response = await fetch(LINK_BASE, { cache: "no-store" });
+            csvText = await response.text();
+
+            localStorage.setItem(
+                CACHE_KEY_POPS,
+                JSON.stringify({
+                    data: csvText,
+                    timestamp: Date.now()
+                })
+            );
+        }
+
+        processarCSV(csvText);
+
     } catch (erro) {
-        console.error("⚠️ Erro na sincronização:", erro);
+        console.error("⚠️ Erro ao sincronizar POPs:", erro);
+
+        // fallback: tenta cache velho
+        const cacheRaw = localStorage.getItem(CACHE_KEY_POPS);
+        if (cacheRaw) {
+            try {
+                const cache = JSON.parse(cacheRaw);
+                processarCSV(cache.data);
+                console.warn("⚠️ Usando cache antigo");
+            } catch {}
+        }
     }
 }
+
+// ==============================================================
+// 🧩 PROCESSAMENTO DO CSV
+// ==============================================================
+function processarCSV(csvText) {
+    const linhas = csvText
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+
+    if (linhas.length < 2) return;
+
+    const separador = linhas[0].includes(";") ? ";" : ",";
+
+    window.popsList.length = 0;
+    window.detalhesPops = {};
+
+    for (let i = 1; i < linhas.length; i++) {
+        const col = linhas[i]
+            .split(separador)
+            .map(v => v.replace(/^"|"$/g, "").trim());
+
+        const nomePop = col[1];
+        if (!nomePop) continue;
+
+        window.popsList.push(nomePop);
+        window.detalhesPops[nomePop] = {
+            pop: col[1] || "---",             // B
+            instalacao: col[2] || "---",      // C
+            contatos: col[3] || "---",        // D
+            forma: col[4] || "---",           // E
+            titular: col[5] || "---",         // F
+            cpf: col[6] || "---",             // G
+            endereco: col[7] || "---",        // H
+            monitoramento: col[8] || "---"    // I
+        };
+    }
+
+    console.log(`✅ ${window.popsList.length} POPs carregados`);
+
+    // Atualiza UI (mantido)
+    if (typeof carregarPops === "function") carregarPops();
+    if (typeof carregarMinimap === "function") carregarMinimap();
+}
+
+// ==============================================================
+// 🚀 DISPARO INICIAL
+// ==============================================================
 sincronizarPopsFinal();
+
+// ==============================================================
+// 🔁 ATUALIZAÇÃO MANUAL (opcional)
+// ==============================================================
+window.atualizarPopsAgora = function () {
+    localStorage.removeItem(CACHE_KEY_POPS);
+    sincronizarPopsFinal();
+};
