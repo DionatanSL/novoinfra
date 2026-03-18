@@ -88,7 +88,7 @@ window.bancoEquipamentos = {
                     nome: "Switch Huawei 6730", 
                     tipo: "rede", 
                     tamanhoU: 1, 
-                    totalPortas: 48, // 👈 Altere para 24, 48, etc.
+                    totalPortas: 24, // 👈 Altere para 24, 48, etc.
                     desc: "📊 SW-HUAWEI-6730-U09",
                     portas: []
                 },
