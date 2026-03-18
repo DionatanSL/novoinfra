@@ -64,6 +64,102 @@ window.bancoEquipamentos = {
                 }
             ]
         }
+    },
+
+    "ES-VVA-A12": {
+        "Rack 01 Equipamentos": {
+            "tamanho": 44, 
+            "foto": "img/vvaa12_equip.jpeg",
+            "equipamentos": [
+                // 🔹 MODELO DGO (Grade 12x12)
+                { 
+                    u: 1, 
+                    nome: "DGO e Acomodador de Cabo", 
+                    tipo: "passivo", 
+                    tamanhoU: 6, 
+                    totalPortas: 144, // 👈 Altere aqui para mudar o tamanho da grade
+                    desc: "📍 Distribuidor Geral Óptico - DGO-01",
+                    portas: []
+                },
+
+                // 🔹 MODELO SWITCH (Horizontal)
+                { 
+                    u: 9, 
+                    nome: "Switch Huawei 6730", 
+                    tipo: "rede", 
+                    tamanhoU: 1, 
+                    totalPortas: 48, // 👈 Altere para 24, 48, etc.
+                    desc: "📊 SW-HUAWEI-6730-U09",
+                    portas: []
+                },
+
+                { 
+                    u: 11, 
+                    nome: "Acomodador de Cabo", 
+                    tipo: "passivo", 
+                    tamanhoU: 1, 
+                    totalPortas: 24, 
+                    desc: "📍 Organizador Frontal - CM-01",
+                    portas: []
+                },
+
+                { 
+                    u: 13, 
+                    nome: "Roteador Cisco 1900", 
+                    tipo: "rede", 
+                    tamanhoU: 1, 
+                    totalPortas: 24, 
+                    desc: "🌐 RT-CISCO-1900-U13",
+                    portas: []
+                },
+
+                { 
+                    u: 23, 
+                    nome: "OLT Huawei SmartAX MA5800", 
+                    tipo: "rede", 
+                    tamanhoU: 12, 
+                    totalPortas: 16, 
+                    desc: "📡 OLT-HUAWEI-MA5800-U23-34",
+                    portas: []
+                },
+
+                { 
+                    u: 43, 
+                    nome: "Régua de Tomada", 
+                    tipo: "energia", 
+                    tamanhoU: 2, 
+                    totalPortas: 8, // 👈 8 tomadas
+                    desc: "🔌 PDU-U43-44",
+                    portas: []
+                }
+            ]
+        },
+
+        "Rack 02 Elétrico": {
+            "tamanho": 44, 
+            "foto": "img/vvaa12_eletr.jpeg",
+            "equipamentos": [
+                // 🔹 MODELO ELÉTRICO (Disjuntores)
+                { 
+                    u: 13, 
+                    nome: "Régua de Disjuntores", 
+                    tipo: "dc", 
+                    tamanhoU: 7, 
+                    totalPortas: 24, // 👈 Aqui define quantos disjuntores aparecem
+                    desc: "⚡ Sistema de Distribuição Elétrica AC/DC",
+                    portas: []
+                },
+                { 
+                    u: 23, 
+                    nome: "Fonte Huawei", 
+                    tipo: "dc", 
+                    tamanhoU: 2, 
+                    totalPortas: 10, 
+                    desc: "🔋 Retificador / Conversor AC/DC",
+                    portas: []
+                }
+            ]
+        }
     }
 };
 //   Modelo de DGO,totalPortas,Visual no Sistema 144,96,72,48,36,24,12//
