@@ -26,6 +26,11 @@ function showPage(id) {
         carregarUsuarios();
     }
 
+    // Destaca item ativo no menu
+    document.querySelectorAll(".sidebar li").forEach(li => li.classList.remove("active-item"));
+    const navEl = document.getElementById("nav-" + id);
+    if (navEl) navEl.classList.add("active-item");
+
     // 3. RE-GATILHO DE MAPA E CLIMA (Garante que o radar não suma)
     if(id === 'home') {
         setTimeout(() => {

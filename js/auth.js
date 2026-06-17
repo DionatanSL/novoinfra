@@ -153,6 +153,18 @@ async function inicializarAuth() {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("dashboard").style.display    = "block";
 
+        // Popula topbar e sidebar com dados do usuário
+        const shortEmail = user.email.split("@")[0];
+        const elTopbar   = document.getElementById("noc-user-display");
+        const elSideName = document.getElementById("sidebar-user-email");
+        const elSideRole = document.getElementById("sidebar-user-role");
+        if (elTopbar)   elTopbar.textContent   = shortEmail;
+        if (elSideName) elSideName.textContent = shortEmail;
+        if (elSideRole) elSideRole.textContent = window.isAdmin ? "Administrador" : "Operador";
+
+        // Inicia relógio
+        iniciarRelogio();
+
         // Mostra menu de usuários só para admin
         const menuUsuarios = document.getElementById("menu-usuarios");
         if (menuUsuarios) menuUsuarios.style.display = window.isAdmin ? "block" : "none";
@@ -244,6 +256,17 @@ async function revogarUsuario(docId) {
     const db = await getFirebaseDB();
     await updateDoc(doc(db, "usuarios", docId), { status: "pendente" });
     await carregarUsuarios();
+}
+
+// ── Relógio em tempo real ──────────────────────────────────────
+function iniciarRelogio() {
+    const el = document.getElementById("noc-relogio");
+    if (!el) return;
+    const tick = () => {
+        el.textContent = new Date().toLocaleTimeString("pt-BR", { hour12: false });
+    };
+    tick();
+    setInterval(tick, 1000);
 }
 
 // ── Inicia ao carregar ─────────────────────────────────────────

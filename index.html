@@ -102,17 +102,29 @@
     <div id="dashboard">
         <div class="main">
             <div class="sidebar shadow">
-                <h2>INFRA OPERAÇÕES</h2>
-                <li onclick="showPage('home')">🏠 Dashboard</li>
-        <li onclick="toggleSubMenu('docMenu')">📚 Documentação <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
-<div id="docMenu" class="submenu" style="display: none;">
-    <li onclick="showPage('equipamentosPage')">🛠️ Equipamentos</li>
-    
-    <li onclick="showPage('dwdmPage')">📟 DWDM</li>
-</div>
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-icon"><i class="fas fa-broadcast-tower"></i></div>
+                    <div>
+                        <div class="sidebar-brand-title">NOC INFRA</div>
+                        <div class="sidebar-brand-sub">Operações</div>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar"><i class="fas fa-user-circle"></i></div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebar-user-email">—</div>
+                        <div class="sidebar-user-role" id="sidebar-user-role">Operador</div>
+                    </div>
+                </div>
+                <div class="sidebar-divider"></div>
+                <li onclick="showPage('home')" class="sidebar-item active-item" id="nav-home">🏠 Dashboard</li>
+                <li onclick="toggleSubMenu('docMenu')" class="sidebar-item has-sub">📚 Documentação <i class="fas fa-chevron-down float-end mt-1" style="font-size:0.7rem;"></i></li>
+                <div id="docMenu" class="submenu" style="display:none;">
+                    <li onclick="showPage('equipamentosPage')">🛠️ Equipamentos</li>
+                    <li onclick="showPage('dwdmPage')">📟 DWDM</li>
+                </div>
 
-
-                <li onclick="toggleSubMenu('popMenu')">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size: 0.7rem;"></i></li>
+                <li onclick="toggleSubMenu('popMenu')" class="sidebar-item has-sub">📡 POPs <i class="fas fa-chevron-down float-end mt-1" style="font-size:0.7rem;"></i></li>
                 <div id="popMenu" class="submenu">
                     <li onclick="showPage('pops')">📑 Lista de POPs</li>
                     <li class="li-zabbix" onclick="consultarAlarmesGeraisZabbix()">🚨 Alarmes Zabbix</li>
@@ -122,17 +134,37 @@
                     <li onclick="showPage('temperatura')">🌡️ Temperatura</li>
                     <li onclick="showPage('acessopops')">🔐 Acesso Pops</li>
                     <li onclick="showPage('usuariosPage')" id="menu-usuarios" style="display:none;">👥 Usuários</li>
-                    <div class="sidebar-footer">
-    <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
-    <p class="dev-name">Dionatan Lima</p>
-    <p class="dev-version">Versão 1.2.5</p>
-</div>
                 </div>
-                <li onclick="efetuarLogout()">🚪 Sair</li>
+
+                <div class="sidebar-divider"></div>
+                <li onclick="efetuarLogout()" class="sidebar-item sidebar-logout">🚪 Sair</li>
+
+                <div class="sidebar-footer">
+                    <div class="dev-version">v1.3.0 · NOC Infraestrutura</div>
+                </div>
             </div>
 
             <div class="content">
-           
+
+                <!-- TOPBAR -->
+                <div class="noc-topbar">
+                    <div class="noc-topbar-left">
+                        <span class="noc-status-dot"></span>
+                        <span class="noc-topbar-title">NOC INFRAESTRUTURA</span>
+                        <span class="noc-topbar-badge">OPERACIONAL</span>
+                    </div>
+                    <div class="noc-topbar-right">
+                        <div class="noc-topbar-time">
+                            <i class="fas fa-clock" style="color:#00d2ff; margin-right:6px;"></i>
+                            <span id="noc-relogio">--:--:--</span>
+                        </div>
+                        <div class="noc-topbar-user">
+                            <i class="fas fa-user-shield" style="color:#00d2ff;"></i>
+                            <span id="noc-user-display">—</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PÁGINA GESTÃO DE USUÁRIOS (admin only) -->
                 <div id="usuariosPage" class="page-content" style="display:none;">
                     <div class="container-fluid">
