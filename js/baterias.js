@@ -55,24 +55,52 @@ function autoFiltro() {
     });
 }
 
+// ── Lê dados da tabela renderizada ────────────────────────────
+function lerDadosDaTabela() {
+    const linhas = [];
+    document.querySelectorAll("#tabelaBaterias tbody tr.pop-row").forEach(tr => {
+        const tds = tr.querySelectorAll("td");
+        if (tds.length < 3) return;
+
+        // Linha de detalhe logo após (pode não existir)
+        const detRow = tr.nextElementSibling;
+        let tipo = "—", ano = "—", autonomia = "—", monitoramento = "—", status = "—";
+        if (detRow) {
+            const texto = detRow.innerText || "";
+            const extrair = (label) => {
+                const m = texto.match(new RegExp(label + "[:\\s]+([^\\n]+)"));
+                return m ? m[1].trim().replace(/^[🔋📅⏳🔌🛡️]+\s*/, "") : "—";
+            };
+            tipo         = extrair("TIPO");
+            ano          = extrair("FABRICAÇÃO");
+            autonomia    = extrair("AUTONOMIA").replace("h", "").trim();
+            monitoramento = extrair("MONITORAMENTO").replace(/[🟢🔴]\s*/g, "").trim();
+            status       = extrair("STATUS");
+        }
+
+        linhas.push({
+            "POP":            tds[0].innerText.trim(),
+            "Saúde (%)":      tds[1].innerText.trim().replace("%", ""),
+            "Tensão DC (V)":  tds[2].innerText.trim().replace("V", ""),
+            "Tipo":           tipo,
+            "Fabricação":     ano,
+            "Autonomia (h)":  autonomia,
+            "Monitoramento":  monitoramento,
+            "Status":         status
+        });
+    });
+    return linhas;
+}
+
 // ── Exportar Excel ─────────────────────────────────────────────
 function exportarBateriasExcel() {
-    const dados = window._dadosBaterias;
+    const dados = lerDadosDaTabela();
     if (!dados || dados.length === 0) {
-        alert("Nenhum dado carregado para exportar.");
+        alert("Nenhum dado na tabela para exportar.");
         return;
     }
 
-    const linhas = dados.map(p => ({
-        "POP": p.POP,
-        "Saúde (%)": p.Saude,
-        "Tensão DC (V)": p.VDC,
-        "Tipo": p.Tipo,
-        "Fabricação": p.Ano,
-        "Autonomia (h)": p.Autonomia,
-        "Monitoramento": p.Monitoramento,
-        "Status": p.Status
-    }));
+    const linhas = dados;
 
     const ws = XLSX.utils.json_to_sheet(linhas);
 
@@ -92,9 +120,9 @@ function exportarBateriasExcel() {
 
 // ── Exportar PDF ───────────────────────────────────────────────
 function exportarBateriasPDF() {
-    const dados = window._dadosBaterias;
-    if (!dados || dados.length === 0) {
-        alert("Nenhum dado carregado para exportar.");
+    const dadosBrutos = lerDadosDaTabela();
+    if (!dadosBrutos || dadosBrutos.length === 0) {
+        alert("Nenhum dado na tabela para exportar.");
         return;
     }
 
@@ -120,7 +148,7 @@ function exportarBateriasPDF() {
     doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
     doc.text(`Gerado em: ${data} às ${hora}`, 14, 31);
-    doc.text(`Total de registros: ${dados.length}`, 200, 31);
+    doc.text(`Total de registros: ${dadosBrutos.length}`, 200, 31);
 
     // Linha separadora
     doc.setDrawColor(0, 210, 255);
@@ -129,15 +157,15 @@ function exportarBateriasPDF() {
 
     // Tabela
     const colunas = ["POP", "Saúde (%)", "Vdc (V)", "Tipo", "Fabricação", "Autonomia (h)", "Monitoramento", "Status"];
-    const linhas = dados.map(p => [
-        p.POP,
-        `${p.Saude}%`,
-        `${p.VDC}V`,
-        p.Tipo || "—",
-        p.Ano || "—",
-        p.Autonomia ? `${p.Autonomia}h` : "—",
-        p.Monitoramento || "—",
-        p.Status || "—"
+    const linhas = dadosBrutos.map(p => [
+        p["POP"],
+        p["Saúde (%)"] + "%",
+        p["Tensão DC (V)"] + "V",
+        p["Tipo"] || "—",
+        p["Fabricação"] || "—",
+        p["Autonomia (h)"] ? p["Autonomia (h)"] + "h" : "—",
+        p["Monitoramento"] || "—",
+        p["Status"] || "—"
     ]);
 
     doc.autoTable({
@@ -161,16 +189,16 @@ function exportarBateriasPDF() {
         alternateRowStyles: {
             fillColor: [11, 19, 32]
         },
-        didParseCell(data) {
-            if (data.section === "body" && data.column.index === 1) {
-                const val = parseFloat(data.cell.raw);
-                data.cell.styles.textColor = val < 92 ? [250, 204, 21] : [34, 197, 94];
-                data.cell.styles.fontStyle = "bold";
+        didParseCell(hookData) {
+            if (hookData.section === "body" && hookData.column.index === 1) {
+                const val = parseFloat(hookData.cell.raw);
+                hookData.cell.styles.textColor = val < 92 ? [250, 204, 21] : [34, 197, 94];
+                hookData.cell.styles.fontStyle = "bold";
             }
-            if (data.section === "body" && data.column.index === 7) {
-                const val = (data.cell.raw || "").toUpperCase();
-                data.cell.styles.textColor = val === "NORMAL" ? [34, 197, 94] : [239, 68, 68];
-                data.cell.styles.fontStyle = "bold";
+            if (hookData.section === "body" && hookData.column.index === 7) {
+                const val = (hookData.cell.raw || "").toUpperCase();
+                hookData.cell.styles.textColor = val === "NORMAL" ? [34, 197, 94] : [239, 68, 68];
+                hookData.cell.styles.fontStyle = "bold";
             }
         },
         margin: { left: 14, right: 14 }
