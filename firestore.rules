@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Baterias e POPs: leitura pública (dados do painel)
+    match /baterias/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /pops/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /geradores/{doc} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Acessos: apenas usuários logados
+    match /acessos/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Usuarios: qualquer um pode criar (cadastro), mas só logado lê/atualiza
+    match /usuarios/{doc} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}

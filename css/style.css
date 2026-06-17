@@ -35,14 +35,20 @@ header, .navbar, .topbar { display: none !important; height: 0 !important; }
     background: rgba(15, 23, 42, 0.95);
     padding: 35px;
     border-radius: 10px;
-    width: 340px;
+    width: 360px;
     text-align: center;
     border: 1px solid #1e293b;
     color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .login-box input,
-.login-box button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 5px; border: none; }
+.login-box button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
+.login-box input { background: #1e293b; color: #e2e8f0; }
+.login-box input::placeholder { color: #64748b; }
 .login-box button { background: #00c3ff; cursor: pointer; font-weight: bold; color: #000; }
+.login-box button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
 .sidebar {

@@ -21,6 +21,11 @@ function showPage(id) {
         el.classList.add("active");
     }
 
+    // Carrega usuários ao abrir página admin
+    if (id === 'usuariosPage' && typeof carregarUsuarios === "function") {
+        carregarUsuarios();
+    }
+
     // 3. RE-GATILHO DE MAPA E CLIMA (Garante que o radar não suma)
     if(id === 'home') {
         setTimeout(() => {

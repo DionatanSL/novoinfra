@@ -55,13 +55,48 @@
 </div>
 <body>
 
+    <!-- TELA DE LOGIN / CADASTRO -->
     <div class="public-area" id="login-screen">
-        <div class="login-box shadow-lg">
+
+        <!-- LOGIN -->
+        <div class="login-box shadow-lg" id="box-login">
             <h2 class="text-title-cyan">Painel Infraestrutura</h2>
-            <input id="user" placeholder="Usuário" autocomplete="off">
+            <p style="color:#94a3b8; font-size:0.8rem; margin:-8px 0 12px;">NOC — Acesso Restrito</p>
+            <input id="user" placeholder="E-mail" autocomplete="off" type="email">
             <input id="pass" type="password" placeholder="Senha">
             <button onclick="logar()">ACESSAR</button>
+            <p style="margin-top:14px; font-size:0.82rem; color:#64748b;">
+                Não tem acesso?
+                <a href="#" onclick="alternarTela('register')" style="color:#00d2ff; text-decoration:none;">Solicitar cadastro</a>
+            </p>
         </div>
+
+        <!-- CADASTRO -->
+        <div class="login-box shadow-lg" id="box-register" style="display:none;">
+            <h2 class="text-title-cyan">Solicitar Acesso</h2>
+            <p style="color:#94a3b8; font-size:0.8rem; margin:-8px 0 12px;">Seu cadastro será aprovado pelo administrador</p>
+            <input id="reg-nome" placeholder="Nome completo" autocomplete="off">
+            <input id="reg-email" placeholder="E-mail corporativo" type="email" autocomplete="off">
+            <input id="reg-senha" type="password" placeholder="Crie uma senha">
+            <input id="reg-cargo" placeholder="Cargo / Setor" autocomplete="off">
+            <button onclick="solicitarCadastro()">ENVIAR SOLICITAÇÃO</button>
+            <p style="margin-top:14px; font-size:0.82rem; color:#64748b;">
+                Já tem conta?
+                <a href="#" onclick="alternarTela('login')" style="color:#00d2ff; text-decoration:none;">Fazer login</a>
+            </p>
+        </div>
+
+        <!-- AGUARDANDO APROVAÇÃO -->
+        <div class="login-box shadow-lg" id="box-pendente" style="display:none; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:12px;">⏳</div>
+            <h2 class="text-title-cyan">Aguardando Aprovação</h2>
+            <p style="color:#94a3b8; font-size:0.85rem; line-height:1.6;">
+                Sua solicitação foi enviada com sucesso.<br>
+                O administrador irá aprovar seu acesso em breve.
+            </p>
+            <button onclick="efetuarLogout()" style="margin-top:8px; background:#475569;">Sair</button>
+        </div>
+
     </div>
 
     <div id="dashboard">
@@ -86,6 +121,7 @@
                     <li onclick="showPage('energia')">⚡ Energia</li>
                     <li onclick="showPage('temperatura')">🌡️ Temperatura</li>
                     <li onclick="showPage('acessopops')">🔐 Acesso Pops</li>
+                    <li onclick="showPage('usuariosPage')" id="menu-usuarios" style="display:none;">👥 Usuários</li>
                     <div class="sidebar-footer">
     <hr style="border-color: rgba(255,255,255,0.05); margin: 20px 0;">
     <p class="dev-name">Dionatan Lima</p>
@@ -97,6 +133,49 @@
 
             <div class="content">
            
+                <!-- PÁGINA GESTÃO DE USUÁRIOS (admin only) -->
+                <div id="usuariosPage" class="page-content" style="display:none;">
+                    <div class="container-fluid">
+                        <h2 class="text-white mb-4">👥 Gestão de Usuários</h2>
+
+                        <!-- Pendentes -->
+                        <div class="card bg-dark text-white border-warning mb-4">
+                            <div class="card-header border-warning d-flex justify-content-between align-items-center">
+                                <span style="color:#fbbf24; font-weight:600;">⏳ Solicitações Pendentes</span>
+                                <span id="badge-pendentes" class="badge bg-warning text-dark">0</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-dark table-hover mb-0">
+                                    <thead><tr>
+                                        <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Solicitado em</th><th style="text-align:center">Ações</th>
+                                    </tr></thead>
+                                    <tbody id="tabela-pendentes">
+                                        <tr><td colspan="5" style="text-align:center; color:#64748b;">Nenhuma solicitação pendente</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Aprovados -->
+                        <div class="card bg-dark text-white border-secondary">
+                            <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                                <span style="color:#10b981; font-weight:600;">✅ Usuários Aprovados</span>
+                                <span id="badge-aprovados" class="badge bg-success">0</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-dark table-hover mb-0">
+                                    <thead><tr>
+                                        <th>Nome</th><th>E-mail</th><th>Cargo</th><th>Aprovado em</th><th style="text-align:center">Ações</th>
+                                    </tr></thead>
+                                    <tbody id="tabela-aprovados">
+                                        <tr><td colspan="5" style="text-align:center; color:#64748b;">Nenhum usuário aprovado</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="dwdmPage" class="page-content" style="display: none;">
     <div class="container-fluid">
         <h2 class="text-white mb-4">📟 Gerência DWDM Modular</h2>
