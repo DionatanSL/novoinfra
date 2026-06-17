@@ -846,36 +846,49 @@ function autoFiltro() {
 // ==============================================================
 // 🗄️ MANUTENÇÃO DE GERADORES: FICHA TÉCNICA TOTAL
 // ==============================================================
-function carregarGeradores() {
+async function carregarGeradores() {
     const tbody = document.getElementById("corpoGeradores");
-    if(!tbody) return;
-    
-    tbody.innerHTML = geradoresData.map((g, i) => `
-        <tr class="gerador-row ${g.status === 'OK' ? 'status-ok' : 'status-maint'}" 
-            onclick="toggleGeradorDetails('gen-details-${i}')" style="cursor:pointer">
-            <td>${g.marca}</td><td>${g.potencia}</td><td><strong>${g.local}</strong></td>
-            <td>${g.cidade}</td><td>${g.prox}</td><td><strong>${g.status}</strong></td>
-        </tr>
-        <tr id="gen-details-${i}" class="gerador-details" style="display:none; background: #0b1320;">
-            <td colspan="6">
-                <div class="p-3 border border-secondary rounded">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="detail-text"><b>⛽ COMBUSTÍVEL:</b> ${g.combustivel}</p>
-                            <p class="detail-text"><b>📡 MONITORAMENTO:</b> ${g.monitoramento}</p>
-                            <p class="detail-text"><b>⚡ CONSUMO:</b> ${g.consumo}</p>
-                            <p class="detail-text"><b>⚙️ MOTOR:</b> ${g.motor}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="detail-text"><b>🔌 FASES:</b> ${g.fase}</p>
-                            <p class="detail-text"><b>📊 CAPACIDADE:</b> ${g.cap}</p>
-                            <p class="detail-text"><b>⏳ AUTONOMIA:</b> ${g.autonomia}</p>
+    if (!tbody) return;
+
+    try {
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js");
+        const { getFirestore, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+        if (!getApps().length) initializeApp(window.firebaseConfig);
+
+        const db   = getFirestore();
+        const snap = await getDocs(collection(db, "geradores"));
+        const lista = snap.docs.map(d => d.data());
+
+        tbody.innerHTML = lista.map((g, i) => `
+            <tr class="gerador-row ${g.status === 'OK' ? 'status-ok' : 'status-maint'}"
+                onclick="toggleGeradorDetails('gen-details-${i}')" style="cursor:pointer">
+                <td>${g.marca}</td><td>${g.potencia}</td><td><strong>${g.local}</strong></td>
+                <td>${g.cidade}</td><td>${g.prox}</td><td><strong>${g.status}</strong></td>
+            </tr>
+            <tr id="gen-details-${i}" class="gerador-details" style="display:none; background: #0b1320;">
+                <td colspan="6">
+                    <div class="p-3 border border-secondary rounded">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="detail-text"><b>⛽ COMBUSTÍVEL:</b> ${g.combustivel}</p>
+                                <p class="detail-text"><b>📡 MONITORAMENTO:</b> ${g.monitoramento}</p>
+                                <p class="detail-text"><b>⚡ CONSUMO:</b> ${g.consumo}</p>
+                                <p class="detail-text"><b>⚙️ MOTOR:</b> ${g.motor}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="detail-text"><b>🔌 FASES:</b> ${g.fase}</p>
+                                <p class="detail-text"><b>📊 CAPACIDADE:</b> ${g.cap}</p>
+                                <p class="detail-text"><b>⏳ AUTONOMIA:</b> ${g.autonomia}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+                </td>
+            </tr>`).join('');
+
+    } catch (err) {
+        console.error("Erro ao carregar geradores:", err);
+        tbody.innerHTML = `<tr><td colspan="6" style="color:#ef4444">Erro ao carregar dados.</td></tr>`;
+    }
 }
 
 // ==============================================================

@@ -1,77 +1,83 @@
-let dbAcessos = JSON.parse(localStorage.getItem('bancoAcessos')) || [];
+// ── Acessos via Firestore ──────────────────────────────────────
+let dbAcessos = [];
 let currentPage = 1;
+let _dbFirestore = null;
 
-function registrarAcesso() {
-    const tec = document.getElementById("tecNome").value;
-    const pop = document.getElementById("tecPop").value;
+async function getDB() {
+    if (_dbFirestore) return _dbFirestore;
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js");
+    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+    if (!getApps().length) initializeApp(window.firebaseConfig);
+    _dbFirestore = getFirestore();
+    return _dbFirestore;
+}
+
+async function registrarAcesso() {
+    const tec   = document.getElementById("tecNome").value;
+    const pop   = document.getElementById("tecPop").value;
     const chave = document.getElementById("tecChave").value;
     const coord = document.getElementById("tecCoordenador").value;
-    const motivo = document.getElementById("tecMotivo").value;
+    const motivo= document.getElementById("tecMotivo").value;
 
-    if(!tec || !pop || !coord) return alert("Selecione Técnico, POP e Coordenador!");
+    if (!tec || !pop || !coord) return alert("Selecione Técnico, POP e Coordenador!");
 
-    dbAcessos.unshift({
-        id: Date.now(),
-        nome: tec,
-        pop: pop,
-        chave: chave,
+    const registro = {
+        id:         Date.now(),
+        nome:       tec,
+        pop:        pop,
+        chave:      chave,
         coordenador: coord,
-        motivo: motivo,
-        status: 'Pendente',
-        entrada: new Date().toLocaleString(),
-        entradaPor: loggedUser || 'admin'
-    });
+        motivo:     motivo,
+        status:     "Pendente",
+        entrada:    new Date().toLocaleString(),
+        entradaPor: loggedUser || "admin"
+    };
 
-    localStorage.setItem('bancoAcessos', JSON.stringify(dbAcessos));
-    carregarTabelaAcessos();
+    try {
+        const db = await getDB();
+        const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+        await addDoc(collection(db, "acessos"), registro);
+        await carregarTabelaAcessosFirestore();
+    } catch (err) {
+        console.error("Erro ao registrar acesso:", err);
+        alert("Erro ao salvar. Verifique a conexão.");
+    }
+}
+
+async function carregarTabelaAcessosFirestore() {
+    try {
+        const db = await getDB();
+        const { collection, getDocs, orderBy, query } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+        const q    = query(collection(db, "acessos"), orderBy("id", "desc"));
+        const snap = await getDocs(q);
+        dbAcessos  = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+        carregarTabelaAcessos();
+    } catch (err) {
+        console.error("Erro ao carregar acessos:", err);
+    }
+}
+
+async function confirmarEntrega(docId) {
+    try {
+        const db = await getDB();
+        const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+        await updateDoc(doc(db, "acessos", docId), {
+            status:  "Entregue",
+            saida:   new Date().toLocaleString(),
+            saidaPor: loggedUser || "admin"
+        });
+        await carregarTabelaAcessosFirestore();
+    } catch (err) {
+        console.error("Erro ao confirmar entrega:", err);
+    }
 }
 
 function carregarTabelaAcessos() {
     const tbody = document.getElementById("corpoAcessos");
-    if(!tbody) return;
-    const itens = dbAcessos.slice((currentPage - 1) * 10, currentPage * 10);
+    if (!tbody) return;
 
-    tbody.innerHTML = itens.map(a => `
-        <tr class="${a.status === 'Pendente' ? 'row-pendente' : 'row-entregue'}">
-            <td>${a.nome}</td>
-            <td>${a.pop}</td>
-            <td>${a.chave}</td>
-            <td><strong>${a.coordenador}</strong></td>
-            <td>${a.motivo}</td>
-            <td style="font-size:0.75rem">${a.entrada}<br><small class="user-tag">NOC: ${a.entradaPor}</small></td>
-            <td><input type="checkbox" class="check-box" onchange="confirmarEntrega(${a.id})"></td>
-        </tr>`).join('');
-    renderPagi(Math.ceil(dbAcessos.length / 10) || 1);
-}
-
-// ==============================================================
-// MANUTENÇÃO: GESTÃO DE CHAVES E BAIXA DE ACESSO (SOLUÇÃO)
-// ==============================================================
-
-// FUNÇÃO PARA CONFIRMAR A DEVOLUÇÃO (O QUE ESTAVA FALHANDO)
-function confirmarEntrega(id) {
-    // Procura o registro pelo ID e muda o status para 'Entregue'
-    dbAcessos = dbAcessos.map(a => a.id === id ? {
-        ...a, 
-        status: 'Entregue', 
-        saida: new Date().toLocaleString(),
-        saidaPor: loggedUser || 'admin'
-    } : a);
-
-    // Salva no banco local e atualiza a tabela na hora
-    localStorage.setItem('bancoAcessos', JSON.stringify(dbAcessos));
-    carregarTabelaAcessos();
-}
-
-// FUNÇÃO PARA RENDERIZAR A TABELA COM O BOTÃO DE DEVOLUÇÃO
-function carregarTabelaAcessos() {
-    const tbody = document.getElementById("corpoAcessos");
-    if(!tbody) return;
-
-    // Paginação de 10 itens
-    const inicio = (currentPage - 1) * 10;
-    const fim = inicio + 10;
-    const itensPagina = dbAcessos.slice(inicio, fim);
+    const inicio     = (currentPage - 1) * 10;
+    const itensPagina = dbAcessos.slice(inicio, inicio + 10);
 
     tbody.innerHTML = itensPagina.map(a => `
         <tr class="${a.status === 'Pendente' ? 'row-pendente' : 'row-entregue'}">
@@ -80,15 +86,14 @@ function carregarTabelaAcessos() {
             <td>${a.chave}</td>
             <td><strong>${a.coordenador}</strong></td>
             <td>${a.motivo}</td>
-            <td style="font-size: 0.75rem;">${a.entrada}<br><small class="user-tag">NOC: ${a.entradaPor}</small></td>
+            <td style="font-size:0.75rem">${a.entrada}<br><small class="user-tag">NOC: ${a.entradaPor}</small></td>
             <td style="text-align:center">
-                ${a.status === 'Pendente' 
-                    ? `<input type="checkbox" class="check-box" onchange="confirmarEntrega(${a.id})">` 
-                    : `<span style="color:#10b981">✔ ${a.saida}</span><br><small class="user-tag">NOC: ${a.saidaPor}</small>`}
+                ${a.status === 'Pendente'
+                    ? `<input type="checkbox" class="check-box" onchange="confirmarEntrega('${a.docId}')">`
+                    : `<span style="color:#10b981">✔ ${a.saida || ''}</span><br><small class="user-tag">NOC: ${a.saidaPor || ''}</small>`}
             </td>
-        </tr>
-    `).join('');
-    
+        </tr>`).join('');
+
     renderPagi(Math.ceil(dbAcessos.length / 10) || 1);
 }
 // ==============================================================
@@ -104,43 +109,23 @@ function renderPagi(t) {
 // ==============================================================
 // MANUTENÇÃO: LIMPEZA DE ACESSOS COM TRAVA DE SEGURANÇA (ADMIN)
 // ==============================================================
-function limparAcessos() {
-    if (confirm("🚨 ATENÇÃO: Deseja limpar os registros finalizados e MANTER os acessos pendentes?")) {
-        
-        const senhaAdmin = prompt("Digite a senha de ADMINISTRADOR:");
+async function limparAcessos() {
+    if (!confirm("🚨 Deseja apagar os registros ENTREGUES e manter os Pendentes?")) return;
 
-        if (senhaAdmin === "123") {
-            // 1. Pegamos apenas os dados de ACESSO do banco local
-            let temporarioAcessos = JSON.parse(localStorage.getItem('bancoAcessos')) || [];
+    try {
+        const db = await getDB();
+        const { collection, getDocs, deleteDoc, doc, query, where }
+            = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
 
-            // 2. Filtramos: MANTÉM apenas quem NÃO tem data de devolução ou status preenchido
-            temporarioAcessos = temporarioAcessos.filter(acesso => {
-                const infoDevolucao = acesso.devolucao || acesso.dataDevolucao || acesso.status;
-                // Se estiver vazio ou for "Pendente", ele fica.
-                return !infoDevolucao || infoDevolucao === "" || infoDevolucao === "Pendente";
-            });
-
-            // 3. Atualizamos a variável global e o localStorage
-            dbAcessos = temporarioAcessos;
-            localStorage.setItem('bancoAcessos', JSON.stringify(dbAcessos));
-
-            // 4. ATUALIZAÇÃO CIRÚRGICA: 
-            // Só redesenha a tabela de acessos para não afetar o menu de POPs
-            if (typeof carregarTabelaAcessos === 'function') {
-                carregarTabelaAcessos();
-            }
-
-            // 5. GARANTIA: Se a lista de POPs sumiu da memória, manda buscar de novo
-            if (!window.popsList || window.popsList.length === 0) {
-                if (typeof sincronizarPopsFinal === 'function') sincronizarPopsFinal();
-            }
-
-            if (typeof mostrarAlarmeTopo === 'function') {
-                mostrarAlarmeTopo("🧹 Histórico limpo! Menu POP preservado. 🔐");
-            }
-        } else {
-            alert("❌ Senha incorreta!");
-        }
+        const q    = query(collection(db, "acessos"), where("status", "==", "Entregue"));
+        const snap = await getDocs(q);
+        const dels = snap.docs.map(d => deleteDoc(doc(db, "acessos", d.id)));
+        await Promise.all(dels);
+        await carregarTabelaAcessosFirestore();
+        alert(`✅ ${dels.length} registro(s) entregues removidos.`);
+    } catch (err) {
+        console.error("Erro ao limpar acessos:", err);
+        alert("Erro ao limpar. Tente novamente.");
     }
 }
 /// ==============================================================
