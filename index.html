@@ -14,6 +14,12 @@
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Exportação Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Exportação PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <div id="modalZabbixGlobal" class="modal-zabbix" style="display: none;">
     <div class="modal-zabbix-content">
@@ -363,7 +369,17 @@
                 </div>
 
                 <div id="baterias" class="page card-custom text-start">
-    <h2 class="h5 text-title-cyan">🔋 Gestão de Baterias (76 POPs)</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 text-title-cyan m-0">🔋 Gestão de Baterias (76 POPs)</h2>
+        <div class="d-flex gap-2">
+            <button onclick="exportarBateriasExcel()" class="btn btn-success btn-sm">
+                <i class="fas fa-file-excel"></i> EXPORTAR EXCEL
+            </button>
+            <button onclick="exportarBateriasPDF()" class="btn btn-danger btn-sm">
+                <i class="fas fa-file-pdf"></i> EXPORTAR PDF
+            </button>
+        </div>
+    </div>
     
 <div class="busca-container" style="padding: 15px; background: #0f172a;">
     <input type="text" 
@@ -421,6 +437,7 @@
 <div id="carrossel-zabbix" class="carrossel-zabbix"></div>
 
 <script src="js/data.js"></script>
+<script src="js/baterias.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/maps.js"></script>
