@@ -55,38 +55,54 @@ function autoFiltro() {
     });
 }
 
-// ── Lê dados da tabela renderizada ────────────────────────────
+// ── Lê dados do bancoBaterias ou da tabela renderizada ─────────
 function lerDadosDaTabela() {
+    // Tenta primeiro o objeto bancoBaterias (fonte principal no GEMANI)
+    if (window.bancoBaterias && Object.keys(window.bancoBaterias).length > 0) {
+        return Object.entries(window.bancoBaterias).map(([pop, d]) => ({
+            "POP":            pop,
+            "Saúde (%)":      String(d.saude || "—"),
+            "Tensão DC (V)":  String(d.vdc   || "—"),
+            "Tipo":           d.tipo       || "—",
+            "Fabricação":     d.ano        || "—",
+            "Autonomia (h)":  d.autonomia  || "—",
+            "Monitoramento":  d.monitor    || "—",
+            "Status":         d.bms        || "—"
+        }));
+    }
+
+    // Fallback: lê direto das linhas da tabela
     const linhas = [];
-    document.querySelectorAll("#tabelaBaterias tbody tr.pop-row").forEach(tr => {
+    document.querySelectorAll("#tabelaBaterias tbody tr").forEach(tr => {
         const tds = tr.querySelectorAll("td");
         if (tds.length < 3) return;
+        // Pula linhas de detalhe (colspan)
+        if (tds[0].colSpan > 1) return;
 
-        // Linha de detalhe logo após (pode não existir)
         const detRow = tr.nextElementSibling;
-        let tipo = "—", ano = "—", autonomia = "—", monitoramento = "—", status = "—";
+        let tipo = "—", ano = "—", autonomia = "—", monitor = "—", bms = "—";
         if (detRow) {
-            const texto = detRow.innerText || "";
-            const extrair = (label) => {
-                const m = texto.match(new RegExp(label + "[:\\s]+([^\\n]+)"));
-                return m ? m[1].trim().replace(/^[🔋📅⏳🔌🛡️]+\s*/, "") : "—";
+            const txt = detRow.innerText || "";
+            const pegar = (label) => {
+                const m = txt.match(new RegExp(label + "[^:]*:\\s*([^|\\n]+)"));
+                return m ? m[1].trim() : "—";
             };
-            tipo         = extrair("TIPO");
-            ano          = extrair("FABRICAÇÃO");
-            autonomia    = extrair("AUTONOMIA").replace("h", "").trim();
-            monitoramento = extrair("MONITORAMENTO").replace(/[🟢🔴]\s*/g, "").trim();
-            status       = extrair("STATUS");
+            tipo      = pegar("TIPO");
+            ano       = pegar("ANO");
+            autonomia = pegar("AUTONOMIA").replace("h","").trim();
+            monitor   = pegar("MONITOR");
+            bms       = pegar("BMS");
         }
 
         linhas.push({
             "POP":            tds[0].innerText.trim(),
-            "Saúde (%)":      tds[1].innerText.trim().replace("%", ""),
-            "Tensão DC (V)":  tds[2].innerText.trim().replace("V", ""),
+            "Saúde (%)":      tds[1].innerText.trim().replace("%",""),
+            "Tensão DC (V)":  tds[2].innerText.trim().replace("V",""),
             "Tipo":           tipo,
             "Fabricação":     ano,
             "Autonomia (h)":  autonomia,
-            "Monitoramento":  monitoramento,
-            "Status":         status
+            "Monitoramento":  monitor,
+            "Status":         bms
         });
     });
     return linhas;

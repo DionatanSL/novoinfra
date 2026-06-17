@@ -165,51 +165,49 @@ function exportarAcessos() {
 }
 
 // ==============================================================
-// 📡 CONEXÃO COM A PLANILHA GOOGLE
+// 🔥 CONEXÃO COM O FIRESTORE (Firebase)
 // ==============================================================
-const URL_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkdgBr3nETAF4sB4670NBHN_smLPKW3fgMM-P5rsk2qgVTw0II-9LeiW2QSnbsfby93n9a23eW1njO/pub?output=csv";
-
-window.bancoBaterias = {}; 
+window.bancoBaterias = {};
 
 async function conectarPlanilha() {
     try {
-        console.log("📡 Conectando à planilha...");
-        const response = await fetch(URL_PLANILHA);
-        const csvText = await response.text();
-        
-        const linhas = csvText.split(/\r?\n/);
-        const separador = linhas[0].includes(';') ? ';' : ',';
-        
-        window.bancoBaterias = {};
+        console.log("🔥 Buscando baterias do Firestore...");
 
-        linhas.slice(1).forEach(linha => {
-            const col = linha.split(separador).map(c => c.replace(/^"|"$/g, '').trim());
-            if (col[0]) {
-                window.bancoBaterias[col[0]] = {
-                    saude: col[1] || "0",
-                    vdc: col[2] || "0",
-                    ano: col[3] || "---",
-                    tipo: col[4] || "---",
-                    autonomia: col[5] || "0",
-                    bancos: col[6] || "0",
-                    monitor: col[7] || "---",
-                    bms: col[8] || "---"
-                };
-            }
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js");
+        const { getFirestore, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+
+        if (!getApps().length) {
+            initializeApp(window.firebaseConfig);
+        }
+
+        const db   = getFirestore();
+        const snap = await getDocs(collection(db, "baterias"));
+
+        window.bancoBaterias = {};
+        snap.forEach(doc => {
+            const d = doc.data();
+            window.bancoBaterias[d.pop] = {
+                saude:     d.saude     ?? 0,
+                vdc:       d.vdc       ?? 0,
+                ano:       d.ano       || "—",
+                tipo:      d.tipo      || "—",
+                autonomia: d.autonomia ?? 0,
+                bancos:    d.bancos    ?? 0,
+                monitor:   d.monitoramento || "—",
+                bms:       d.bms       || "—"
+            };
         });
 
-        console.log("✅ Dados carregados! Total:", Object.keys(window.bancoBaterias).length);
-        
-        // --- GATILHOS DE ATUALIZAÇÃO ---
-        carregarTabelaBaterias(); // Atualiza a tabela na aba Baterias
-        
-        // Avisa o gráfico da Home que os dados chegaram
+        console.log("✅ Baterias carregadas do Firestore:", Object.keys(window.bancoBaterias).length);
+
+        carregarTabelaBaterias();
+
         if (typeof renderizarGraficoBaterias === 'function') {
             renderizarGraficoBaterias();
         }
 
     } catch (err) {
-        console.error("❌ Erro ao ler planilha:", err);
+        console.error("❌ Erro ao buscar baterias do Firestore:", err);
     }
 }
 
@@ -253,62 +251,53 @@ if (typeof conectarPlanilha === 'function') {
 }
 
 // 🔗 Link base da planilha
-const LINK_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5xzAJogS7jNeLGdX34WZ6YMSjvAusiqbSXaXXYbYez_uwhXcrsCizWFM3Yt2w1Xr4lEsHjwxDRLH-/pub?output=csv";
-
-// 🌐 Variáveis globais (mantidas)
-window.popsList = [];
+// 🌐 Variáveis globais
+window.popsList    = [];
 window.detalhesPops = {};
 
-// 🧠 Cache
-const CACHE_KEY_POPS = "pops_csv_cache_v2";
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
 // ==============================================================
-// 🔄 SINCRONIZAÇÃO PRINCIPAL
+// 🔥 SINCRONIZAÇÃO DE POPs VIA FIRESTORE
 // ==============================================================
 async function sincronizarPopsFinal() {
     try {
-        let csvText = null;
+        console.log("🔥 Buscando POPs do Firestore...");
 
-        // 1️⃣ Tenta cache
-        const cacheRaw = localStorage.getItem(CACHE_KEY_POPS);
-        if (cacheRaw) {
-            const cache = JSON.parse(cacheRaw);
-            if (Date.now() - cache.timestamp < CACHE_TTL) {
-                csvText = cache.data;
-                console.log("⚡ POPs carregados do cache");
-            }
+        const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js");
+        const { getFirestore, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js");
+
+        if (!getApps().length) {
+            initializeApp(window.firebaseConfig);
         }
 
-        // 2️⃣ Se não tiver cache, busca online
-        if (!csvText) {
-            console.log("🌐 Buscando POPs da planilha...");
-            const response = await fetch(LINK_BASE, { cache: "no-store" });
-            csvText = await response.text();
+        const db   = getFirestore();
+        const snap = await getDocs(collection(db, "pops"));
 
-            localStorage.setItem(
-                CACHE_KEY_POPS,
-                JSON.stringify({
-                    data: csvText,
-                    timestamp: Date.now()
-                })
-            );
-        }
+        window.popsList    = [];
+        window.detalhesPops = {};
 
-        processarCSV(csvText);
+        snap.forEach(doc => {
+            const d = doc.data();
+            if (!d.pop) return;
+            window.popsList.push(d.pop);
+            window.detalhesPops[d.pop] = {
+                ponto:        d.pop,
+                instalacao:   d.instalacao   || "",
+                eletrica:     d.forma        || "",
+                titular:      d.titular      || "",
+                cnpj:         d.cnpj         || "",
+                contatos:     d.contatos     || "",
+                endereco:     d.endereco     || "",
+                monitoramento: d.monitoramento || ""
+            };
+        });
+
+        console.log("✅ POPs carregados do Firestore:", window.popsList.length);
+
+        if (typeof carregarPops === 'function')    carregarPops();
+        if (typeof inicializarMapa === 'function') inicializarMapa();
 
     } catch (erro) {
-        console.error("⚠️ Erro ao sincronizar POPs:", erro);
-
-        // fallback: tenta cache velho
-        const cacheRaw = localStorage.getItem(CACHE_KEY_POPS);
-        if (cacheRaw) {
-            try {
-                const cache = JSON.parse(cacheRaw);
-                processarCSV(cache.data);
-                console.warn("⚠️ Usando cache antigo");
-            } catch {}
-        }
+        console.error("⚠️ Erro ao sincronizar POPs do Firestore:", erro);
     }
 }
 
